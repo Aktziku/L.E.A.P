@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://Aktziku.github.io/LEAP/",
+  "homepage": "https://aktziku.github.io/LEAP/",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
