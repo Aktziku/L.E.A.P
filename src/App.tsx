@@ -40,7 +40,7 @@ setupIonicReact();
 
 const App: React.FC = () => (
   <IonApp>
-    <IonReactRouter basename="/LEAP">
+    <IonReactRouter basename="/L.E.A.P">
       <IonRouterOutlet>
         <Route exact path="/">
           <Redirect to="/login" />
