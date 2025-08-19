@@ -10,6 +10,7 @@ export default defineConfig({
     react(),
     legacy()
   ],
+  base:"LEAP",
   test: {
     globals: true,
     environment: 'jsdom',
