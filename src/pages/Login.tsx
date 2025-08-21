@@ -12,7 +12,7 @@ const Login: React.FC = () => {
         await present('Loging in...')
         setTimeout(async() => {
             dismiss();
-            router.push('/home', 'root', 'replace');
+            router.push('/L.E.A.P/app', 'root', 'replace');
         }, 2000);
     };
 
