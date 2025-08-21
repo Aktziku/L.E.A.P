@@ -17,7 +17,7 @@ const Login: React.FC = () => {
     };
 
     return (
-        <IonPage>
+        <IonPage className='ion-justify-content-center'>
             <IonContent>
                 <IonGrid fixed>
 
@@ -48,23 +48,19 @@ const Login: React.FC = () => {
                                     Login
                                     <IonIcon icon={logIn} slot="end" />
                                 </IonButton>
-                                
-                                <IonButton routerLink="/register" expand="full" fill="clear" shape='round'>
-                                    Don't have an account? Register here
-                                </IonButton>
                                 </form>
 
                                 <div className="ion-text-center">
                                 or sign in with
                                 </div>
                                 <form className='ion-text-center'>
-                                    <IonButton className='ion-margin-top'  fill="clear" shape='round'>
+                                    <IonButton className='ion-margin-top'  fill="clear" shape='round' size='small'>
                                         <IonIcon icon={logoGoogle} slot="start" />   
-                                        Google
+
                                     </IonButton>
-                                    <IonButton className='ion-margin-top'  fill="clear" shape='round'>
+                                    <IonButton className='ion-margin-top'  fill="clear" shape='round' size='small'>
                                         <IonIcon icon={logoFacebook} slot="start" />   
-                                        Facebook
+
                                     </IonButton>
                                 </form>
                             </IonCardContent>
