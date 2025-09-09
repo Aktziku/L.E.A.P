@@ -36,6 +36,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import LandingPage from './pages/LandingPage';
+import AdminHome from './pages/admin/AdminHome';
 
 setupIonicReact();
 
@@ -46,7 +47,7 @@ const App: React.FC = () => (
         <Route exact path="/" component={LandingPage} />
         <Route exact path="/login" component={Login} />
         <Route exact path="/register" component={Register} />
-        <Route  path="/L.E.A.P/app" component={Home} />
+        <Route  path="/admin" component={AdminHome} />
       </IonRouterOutlet>
     </IonReactRouter>
   </IonApp>

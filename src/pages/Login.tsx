@@ -7,12 +7,12 @@ const Login: React.FC = () => {
     const[present, dismiss] = useIonLoading();
 
     const doLogin = async (event:any) => {
-        // Handle login logic here
+       
         event.preventDefault();
         await present('Loging in...')
         setTimeout(async() => {
             dismiss();
-            router.push('/L.E.A.P/app', 'root', 'replace');
+            router.push('/admin/dashboard', 'root', 'replace');
         }, 2000);
     };
 
