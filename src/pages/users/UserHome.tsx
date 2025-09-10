@@ -1,7 +1,7 @@
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/react';
 import React from 'react';
 
-const Home: React.FC = () => {
+const UserHome: React.FC = () => {
 
     return (
         <IonPage>
@@ -17,4 +17,4 @@ const Home: React.FC = () => {
     );
 };
 
-export default Home;
+export default UserHome;
