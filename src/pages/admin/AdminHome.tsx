@@ -26,6 +26,7 @@ import AdminDashboard from './Tabs/AdminDashboard';
 import ProfileManagement from './Tabs/ProfileManagement';
 import QuizManagement from './Tabs/QuizManagement';
 import ModulesManagement from './Tabs/ModuleManagement';
+import { supabase } from '../../utils/supabaseClients';
 
 const AdminHome: React.FC = () => {
     const [isHovered, setIsHovered] = useState(false);
@@ -47,10 +48,15 @@ const AdminHome: React.FC = () => {
         {name: 'Module Management',  url: '/admin/modules', icon: readerOutline},
     ];
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         try {
-            localStorage.removeItem('userToken');
-            localStorage.removeItem('userData');
+            const {error} = await supabase.auth.signOut();
+            if (error) {
+                console.error('Logout error:', error.message);
+                return;
+            }
+            localStorage.clear();
+            
             navigation.push('/login', 'forward', 'replace');
         } catch (error) {
             console.error('Logout error:', error);

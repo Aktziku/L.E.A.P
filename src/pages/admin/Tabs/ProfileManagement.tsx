@@ -27,6 +27,8 @@ const ProfileManagement: React.FC = () => {
     const [showToast, setShowToast] = useState(false);
     const [importing, setImporting] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [editingProfile, setEditingProfile] = useState < Profile | null > (null);
+    const [isEditing, setIsEditing] = useState(false);
 
     // Reset loading state and fetch profiles 
     useIonViewWillEnter(() => {
@@ -213,7 +215,11 @@ const ProfileManagement: React.FC = () => {
                         {/*Button for adding profiles */}
                     <IonButton
                         className="ion-margin-end"
-                        onClick={() => setShowAddModal(true)}
+                        onClick={() => {
+                            setShowAddModal(true);
+                            setIsEditing(false);
+                            setEditingProfile(null);
+                        }}
                         style={{
                             '--background': '#c48ace',
                             color: 'white',
@@ -287,6 +293,64 @@ const ProfileManagement: React.FC = () => {
                                         <p><strong>School:</strong> {profile.school}</p>
                                         <p><strong>School Level:</strong> {profile.schoollevel}</p>
                                     </div>
+
+                                    {/*Edit and Remove Buttons */}
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            gap: '10px',
+                                            marginTop: '15px',
+                                        }}
+                                    >
+                                        {/*Edit Button */}
+                                        <IonButton
+                                            size='small'
+                                            fill='solid'
+                                            onClick={() =>{
+                                                setEditingProfile(profile);
+                                                setIsEditing(true);
+                                                setShowAddModal(true);
+                                            }}
+                                            style={{
+                                                '--background':'#c48ace',
+                                                color: 'white',
+                                                felx: 1,
+                                            }}
+                                        >
+                                            Edit
+                                        </IonButton>
+
+                                        {/*Remove Button */}
+                                        <IonButton
+                                            size='small'
+                                            fill='solid'
+                                            color='danger'
+                                            style={{flex: 1}}
+                                            onClick={async () => {
+                                                try {
+                                                    const {error} = await supabase
+                                                        .from('profile')
+                                                        .delete()
+                                                        .eq('profileid', profile.profileid);
+
+                                                    if (error) {
+                                                        setToastMessage('Error deleting profile');
+                                                        setShowToast(true);
+                                                    } else {
+                                                        setToastMessage('Profile deleted successfully');
+                                                        setShowToast(true);
+                                                        fetchProfiles();
+                                                    }
+                                                } catch (error) {
+                                                    setToastMessage('Unspected error occurred');
+                                                    setShowToast(true);
+                                                }
+                                            }}
+                                        >
+                                            Remove
+                                        </IonButton>
+                                    </div>
+       
                                 </IonCardContent>
                             </IonCard>
                         </IonCol>
@@ -296,17 +360,19 @@ const ProfileManagement: React.FC = () => {
         </div>
 
         <IonToast
-            isOpen={showToast}
-            onDidDismiss={() => setShowToast(false)}
-            message={toastMessage}
-            duration={3000}
-            position="bottom"
+            isOpen = {showToast}
+            onDidDismiss = {() => setShowToast(false)}
+            message = {toastMessage}
+            duration = {3000}
+            position = "bottom"
         />
 
         <AddProfileModal 
-            isOpen={showAddModal}
-            onClose={() => setShowAddModal(false)}
-            onSave={handleAddProfile}
+            isOpen = {showAddModal}
+            onClose = {() => setShowAddModal(false)}
+            onSave = {fetchProfiles}
+            profileToEdit = {editingProfile}
+            isEditing = {isEditing}
         />
             </IonContent>
         </IonPage>

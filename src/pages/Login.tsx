@@ -63,7 +63,10 @@ const Login: React.FC = () => {
                 provider,
                 options:{
                     redirectTo: `${window.location.origin}/L.E.A.P/auth/callback`,
-                }
+                    queryParams: {
+                        prompt:'select_account',
+                    },
+                },
             });
             if(error) throw error;
         } catch (error: any){
