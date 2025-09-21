@@ -1,184 +1,202 @@
-import { IonButton, IonContent, IonHeader, IonIcon, IonImg, IonModal, IonPage, IonSearchbar, IonTabBar, IonTabButton, IonTabs, IonTitle, IonToolbar, useIonRouter } from '@ionic/react';
-import { logoIonic, searchOutline } from 'ionicons/icons';
+import {
+    IonButton,
+    IonCard,
+    IonCardContent,
+    IonCardHeader,
+    IonCardTitle,
+    IonContent,
+    IonGrid,
+    IonHeader,
+    IonIcon,
+    IonPage,
+    IonRow,
+    IonCol,
+    useIonRouter,
+} from '@ionic/react';
+import { peopleOutline, readerOutline, schoolOutline } from 'ionicons/icons';
 import React, { useEffect, useState } from 'react';
+import { Line } from 'react-chartjs-2';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+} from 'chart.js';
+
+// Register ChartJS components
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+);
 
 const AdminDashboard: React.FC = () => {
-    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    const chartRef = React.useRef<any>(null);
+
+    // Add resize observer
     useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        const handleResize = () => {
+            if (chartRef.current) {
+                chartRef.current.resize();
+            }
+        };
+
         window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
     }, []);
 
-    const navigation = useIonRouter();
-    
-    {/* State for controlling the search modal visibility */}
-    const [ShowSearchModal, setShowSearchModal] = useState(false);
-
-    const handleLogout = () => {
-        try {
-            localStorage.removeItem('userToken');
-            localStorage.removeItem('userData');
-            navigation.push('/login', 'forward', 'replace');
-        } catch (error) {
-            console.error('Logout error:', error);
+    // Dummy data - replace with actual data from your backend
+    const stats = {
+        totalUsers: 150,
+        totalModules: 25,
+        totalQuizzes: 40,
+        averageScores: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            data: [75, 82, 78, 85, 80, 88]
         }
     };
 
+    const chartData = {
+        labels: stats.averageScores.labels,
+        datasets: [
+            {
+                label: 'Average Quiz Scores',
+                data: stats.averageScores.data,
+                fill: false,
+                borderColor: '#b25ac2ff',
+                backgroundColor: '#f8adc6',
+                pointBackgroundColor: '#f8adc6',
+                tension: 0.4,
+            },
+        ],
+    };
+
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top' as const,
+            },
+            title: {
+                display: true,
+                text: 'Average Quiz Scores Over Time',
+            },
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                min: 50,
+                max: 100,
+            },
+        },
+        resizeDelay: 200, // Add small delay for smooth resizing
+    };
+
+    const StatCard = ({ title, value, icon, color }: { title: string; value: number; icon: string; color: string }) => (
+        
+        <IonCard style={{ margin: '10px', borderRadius: '15px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+            <IonCardContent style={{ padding: '20px', background: '#ffffffff' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                        <h3 style={{ margin: '0', color: '#5a2d6d', fontSize: '1rem' }}>{title}</h3>
+                        <h2 style={{ margin: '10px 0', color: '#5a2d6d', fontSize: '1.8rem', fontWeight: 'bold' }}>{value}</h2>
+                    </div>
+                    <IonIcon
+                        icon={icon}
+                        style={{
+                            fontSize: '2.5rem',
+                            padding: '15px',
+                            borderRadius: '12px',
+                            backgroundColor: color,
+                            color: 'white',
+                        }}
+                    />
+                </div>
+            </IonCardContent>
+        </IonCard>
+    );
+
     return (
         <IonPage>
-            <IonHeader 
-            style={{ 
-                '--background': '#4C1D95' 
-                }}>
-                    <IonToolbar style={{ 
-                        '--background': '#4C1D95',
-                        display: 'flex',
-                        alignItems: 'center',
-                            }}>
-    
-                        <IonImg 
-                            className='ion-margin-left' 
-                            slot='start' 
-                            src={logoIonic} 
-                            alt="Ionic Logo" 
-                            style={{ 
-                                width: 'clamp(30px, 5vw, 50px)',
-                                height:'auto',
-                                marginLeft: 'clamp(8px, 2vw, 16px)',
-                            }} >
-                        </IonImg>
+            <IonContent style={{ '--background': '#f8d9f0ff' }}>
 
-                        <IonTitle 
-                            className='ion-text-left' 
-                            style={{ 
-                                '--color': '#F3E8FF',
-                                fontSize: 'clamp(14px, 2vw, 20px)',
-                            }}>
-                                Admin Dashboard
-                        </IonTitle>
-
-                        <IonButton
-                            slot='end' 
-                            size='small'       
-                            style={{ 
-                                marginRight: 'clamp(8px, 4vw, 50px)',
-                                fontSize: 'clamp(10px, 1.5vw, 14px)',
-                                '--background': '#EAB308',
-                                '--color': '#4C1D95',
-                                borderRadius: '20px',
-                                padding: '0 12px',
-                            }} 
-                            onClick={handleLogout}>
-                                Logout
-                        </IonButton>
-                    </IonToolbar>
-                            
-                    {/* Search bar and Add New Profile button */}
-                    <IonToolbar 
-                        style={{ 
-                            '--border-width': '0',
-                            '--background': '#ffffff',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap:'clamp(8px, 2vw, 20px)',
-                            padding: '0 clamp(10px, 3vw,40px)',
-                        }}>
-                        
-                        {!isMobile ? (
-                            <>
-                        <IonButton 
-                            slot='start'
-                            size='small'
-                            style={{
-                                fontSize: 'clamp(10px, 1.5vw, 14px)',
-                                '--background': '#6D28D9',
-                                'marginLeft': 'clamp(4px, 2vw, 40px)',
-                                padding: '0 12px',
-                                }}
-                            >
-                                Search
-                        </IonButton>
-    
-                        <IonSearchbar 
-                            placeholder="Search" 
-                            style={{ 
-                                flex: 1, 
-                                maxWidth: 'clamp(180px, 80vw, 1000px)',
-                                '--border-radius': '25px',
-                                '--background': '#FFFFFF',
-                                'borderRadius': '25px',
-                                'border': '2px solid #EAB308',
-                                '--color': '#4C1D95',
-                                '--placeholder-color': '#4C1D95',
-                                '--icon-color': '#4C1D95',
-                                '--placeholder-opacity': '0.7',
-                                '--box-shadow': 'none',
-                                '--height': 'clamp(4px, 5vw, 70px)',
-                                fontSize: 'clamp(1px, 1.5vw, 10px)',
-                                'paddinginLine': 'clamp(12px, 2vw, 16px)',
-    
-                            }}>
-                        </IonSearchbar>
-    
-                        
-                        </>
-                        ) : (
-                        <IonButton 
-                            fill="clear" 
-                            slot="start"
-                            onClick={() => setShowSearchModal(true)}
-                        >
-                                <IonIcon icon={searchOutline} style={{ fontSize: '24px', color: '#6D28D9' }} />
-                        </IonButton>
-                        )}
-
-                        <IonButton 
-                            size='small'
-                            slot='end'
-                            style={{
-                                fontSize: 'clamp(10px, 1.5vw, 14px)',
-                                '--background': '#6D28D9',
-                                borderRadius: '20px',
-                                padding: '0 12px',
-                                }}>
-                                Add New Profile
-                        </IonButton>
-
-                    </IonToolbar>
-                </IonHeader>
-            <IonModal isOpen={ShowSearchModal} onDidDismiss={() => setShowSearchModal(false)}>
-                <IonContent>
-                    <IonSearchbar 
-                        placeholder="Search"
-                        debounce={300}
-                        style={{ 
-                            '--border-radius': '0px',   
-                            '--background': '#FFFFFF',
-                            borderRadius: '25px',
-                            border: '2px solid #EAB308',
-                            '--color': '#4C1D95',
-                            '--placeholder-color': '#4C1D95',
-                            '--icon-color': '#4C1D95',
-                            '--placeholder-opacity': '0.7',
-                            '--box-shadow': 'none',
-                        }}>
-                        </IonSearchbar>
-
-                        <IonButton
-                            expand='block'
-                            color="medium"
-                            style={{
-                                marginTop: '16px',
-                                borderRadius: '20px',
+                <div 
+                    style={{ 
+                        padding: '20px',
                         }}
-                            onClick={() => setShowSearchModal(false)}
+                >
+                    {/* Stats Cards */}
+                    <IonGrid>
+                        <IonRow>
+                            <IonCol size="12" sizeMd="4">
+                                <StatCard
+                                    title="Total Users"
+                                    value={stats.totalUsers}
+                                    icon={peopleOutline}
+                                    color="#f48fb1"
+                                />
+                            </IonCol>
+                            <IonCol size="12" sizeMd="4">
+                                <StatCard
+                                    title="Total Modules"
+                                    value={stats.totalModules}
+                                    icon={readerOutline}
+                                    color="#ba68c8"
+                                />
+                            </IonCol>
+                            <IonCol size="12" sizeMd="4">
+                                <StatCard
+                                    title="Total Quizzes"
+                                    value={stats.totalQuizzes}
+                                    icon={schoolOutline}
+                                    color="#7c4dff"
+                                />
+                            </IonCol>
+                        </IonRow>
+                    </IonGrid>
+
+                    {/* Chart */}
+                    <IonCard 
+                        style={{ 
+                            margin: '20px 0', 
+                            padding: '20px', 
+                            borderRadius: '15px',
+                            background: 'linear-gradient(135deg, #c48ace, #f8adc6)',
+                            }}
                         >
-                            Close
-                        </IonButton>
-                </IonContent>
-            </IonModal>
+
+                        <IonCardHeader>
+                            <IonCardTitle style={{ color: '#5a2d6d' }}>Quiz Performance Overview</IonCardTitle>
+                        </IonCardHeader>
+                        
+                        <IonCardContent style={{ 
+                            height: '50vh', // Make height relative to viewport
+                            position: 'relative', // Required for chart resizing
+                            width: '100%' // Ensure full width
+                        }}>
+                            <Line 
+                                ref={chartRef}
+                                data={chartData} 
+                                options={chartOptions}
+                                style={{ width: '100%', height: '100%' }}
+                            />
+                        </IonCardContent>
+                    </IonCard>
+                </div>
+            </IonContent>
+                                
+                            
         </IonPage>
     );
 };

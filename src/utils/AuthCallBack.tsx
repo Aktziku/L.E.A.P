@@ -7,20 +7,20 @@ const AuthCallback: React.FC = () => {
   const router = useIonRouter();
 
   useEffect(() => {
-  const handleOAuth = async () => {
+    const handleOAuth = async () => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
+    console.log('Auth state:', user); // Debug log
+
     if (!user) {
       router.push("/login", "root", "replace");
       return;
-    }
-
-    // Check if user already exists
+    }    // Check if user already exists
     const { data: existingAccount, error: fetchError } = await supabase
       .from("accounts")
-      .select("role")
+      .select("role, auth_id")
       .eq("email", user.email)
       .maybeSingle();
 
@@ -28,6 +28,20 @@ const AuthCallback: React.FC = () => {
       console.error("Fetch error:", fetchError.message);
       router.push("/login", "root", "replace");
       return;
+    }
+
+    // If account exists but auth_id is not set, update it
+    if (existingAccount && !existingAccount.auth_id) {
+      const { error: updateError } = await supabase
+        .from("accounts")
+        .update({ auth_id: user.id })
+        .eq("email", user.email);
+
+      if (updateError) {
+        console.error("Update error:", updateError.message);
+        router.push("/login", "root", "replace");
+        return;
+      }
     }
 
     // Insert only if new
@@ -40,6 +54,7 @@ const AuthCallback: React.FC = () => {
             "New User",
           email: user.email,
           role: "user",
+          auth_id: user.id,
         },
       ]);
 
