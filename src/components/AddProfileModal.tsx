@@ -265,7 +265,6 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
                                 >
                                     <IonSelectOption value="Male">Male</IonSelectOption>
                                     <IonSelectOption value="Female">Female</IonSelectOption>
-                                    <IonSelectOption value="Other">Other</IonSelectOption>
                                 </IonSelect>
                             </IonItem>
 

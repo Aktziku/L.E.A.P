@@ -1,58 +1,364 @@
-import { IonButton, IonCard, IonCardContent, IonCol, IonContent, IonGrid, IonHeader, IonInput, IonInputPasswordToggle, IonPage, IonRow, IonTitle, IonToolbar } from '@ionic/react';
-import React from 'react';
+import { IonAlert, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonCol, IonContent, IonGrid, IonHeader, IonInput, IonInputPasswordToggle, IonModal, IonPage, IonRow, IonSelect, IonSelectOption, IonText, IonTitle, IonToolbar } from '@ionic/react';
+import React, { useState } from 'react';
+import { supabase } from '../utils/supabaseClients';
+import bcrypt from 'bcryptjs';
+
+const AlertBox: React.FC<{ message: string; isOpen: boolean; onClose: () => void }> = ({ message, isOpen, onClose }) => {
+  return (
+    <IonAlert
+      isOpen={isOpen}
+      onDidDismiss={onClose}
+      header="Notification"
+      message={message}
+      buttons={['OK']}
+    />
+  );
+};
 
 const Register: React.FC = () => {
-    const styles = {
-        dropShadow: {
-            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
+    const [username, setUsername] = useState('');
+    const [FirstName, setFirstName] = useState('');
+    const [LastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+    const [showAlert, setShowAlert] = useState(false);
+    const [showVerifycationModal, setShowVerifycationModal] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [Address, setAddress] = useState('');
+    const [Gender, setGender] = useState('');
+
+    {/*function for account verification*/}
+    const handleVerification = () => {
+        if (password !== confirmPassword) {
+            setErrorMessage('Passwords do not match');
+            setShowAlert(true);
+            return;
+        }
+        setShowVerifycationModal(true);
+    }
+
+    {/*function to handle account creation*/}
+    const handleSignup = async () => {
+         setShowVerifycationModal(false);
+        try {
+            const {data, error} = await supabase.auth.signUp({ email, password},);
+
+            if (error) {
+                throw new Error ("Account creation failed" + error.message);
+            }
+
+           const profileData = {
+                username,
+                firstName: FirstName,
+                lastName: LastName,
+                email,
+            };
+
+            localStorage.setItem("pendingProfile", JSON.stringify(profileData));
+
+            setErrorMessage("Please check your email to confirm your account before logging in.");
+            setShowAlert(true);
+   
+        } catch (err) {
+            if (err instanceof Error) {
+                setErrorMessage(err.message);
+            } else {
+                setErrorMessage('Account creation failed');
+            }
+            setShowAlert(true);
         }
     };
 
+    
+    
     return (
         <IonPage>
-            <IonContent className="ion-padding">
+            <IonContent 
+                style={{
+                    '--background': '#ffffff',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}
+            >
+                <IonCard
+                    style={{
+                        width: 'clamp(280px, 60vw, 600px)',
+                        padding: 'clamp(12px, 2vw, 32px)',
+                        margin: 'auto',
+                        background: '#ffffff',
+                        boxShadow: '0 6px 16px rgba(196, 138, 206, 0.25)',
+                        borderRadius: '16px',
+                        marginTop: 'clamp(12px, 2vw, 32px)',                
+                    }}
+                >
+                    <IonCardContent>
+                        <h1
+                            style={{
+                                fontSize: '1.5rem',
+                                fontWeight: 'bold',
+                                marginBottom: '1rem',
+                                color: '#000000ff',
+                                textAlign: 'center'
+                            }}
+                        >
+                            Create an Account
 
-                <IonGrid fixed>
-                    <IonRow class="ion-justify-content-center">
-                        <IonCol size="12" size-md="8" size-lg="6" size-xl="4">
-                            <IonCard className='ion-shadow'>
-                                <IonCardContent>
-                                    <IonTitle className="ion-text-center" color={'primary'}>Register Form</IonTitle>
+                        </h1>
 
-                                    <IonInput className='ion-margin-top' fill="outline"  label="User Name" labelPlacement="floating" value=""
-                                        placeholder=" Enter Your User Name">
+                        <IonGrid fixed>
+                            {/*input fields for lastname and firstname*/}
+                            <IonRow>
+                                <IonCol>
+                                    <IonInput
+                                        fill="outline" 
+                                        label="First Name" 
+                                        labelPlacement="floating" 
+                                        placeholder=" Enter Your First Name"
+                                        required
+                                        value={FirstName}
+                                        onIonChange={(e) => setFirstName(e.detail.value!)}
+                                        style={{
+                                            '--highlight-color-focused': '#c48ace',
+                                            '--highlight-color': '#8e5a9e',
+                                            color: '#444',
+                                            marginTop: '1rem'
+                                        }}
+                                    />
+                                </IonCol>
+                                <IonCol>
+                                <IonInput
+                                        fill="outline" 
+                                        label="Last Name" 
+                                        labelPlacement="floating" 
+                                        placeholder=" Enter Your Last Name"
+                                        required
+                                        value={LastName}
+                                        onIonChange={(e) => setLastName(e.detail.value!)}
+                                        style={{
+                                            '--highlight-color-focused': '#c48ace',
+                                            '--highlight-color': '#8e5a9e',
+                                            color: '#444',
+                                            marginTop: '1rem'
+                                        }}
+                                    />
+                                </IonCol>
+                            </IonRow>
+
+                            {/*input fields for gender and birthdate*/}
+                            <IonRow>
+                                <IonCol>
+                                    <IonSelect
+                                        fill='outline'
+                                        label="Gender"
+                                        labelPlacement="floating"
+                                        value={Gender}
+                                        onIonChange={(e) => setGender(e.detail.value!)}
+                                        style={{
+                                           '--highlight-color-focused': '#c48ace',
+                                            '--highlight-color': '#8e5a9e',
+                                            color: '#444',
+                                            marginTop: '1rem'
+                                        }}  
+                                    >
+                                        <IonSelectOption value="Male">Male</IonSelectOption>
+                                        <IonSelectOption value="Female">Female</IonSelectOption>
+                                    </IonSelect>
+                                </IonCol>
+                            </IonRow>
+                            
+                            {/*input fields for username*/}
+                            <IonRow>
+                                <IonCol>
+                                    <IonInput
+                                        fill="outline" 
+                                        label="User Name" 
+                                        labelPlacement="floating" 
+                                        placeholder=" Enter Your UserName"
+                                        required
+                                        value={username}
+                                        onIonChange={(e) => setUsername(e.detail.value!)}
+                                        style={{
+                                            '--highlight-color-focused': '#c48ace',
+                                            '--highlight-color': '#8e5a9e',
+                                            color: '#444',
+                                            marginTop: '1rem'
+                                        }}
+                                    />
+                                </IonCol>
+                            </IonRow>
+                            
+                            {/*input fields for Address*/}
+                            <IonRow>
+                                <IonCol>
+                                    <IonInput
+                                        fill="outline" 
+                                        label="Address" 
+                                        labelPlacement="floating" 
+                                        placeholder=" Enter Your Address"
+                                        required
+                                        value={Address}
+                                        onIonChange={(e) => setAddress(e.detail.value!)}
+                                        style={{
+                                            '--highlight-color-focused': '#c48ace',
+                                            '--highlight-color': '#8e5a9e',
+                                            color: '#444',
+                                            marginTop: '1rem',
+                                        }}
+                                    />
+                                </IonCol>
+                            </IonRow>
+
+                            {/*input fields for email*/}
+                            <IonRow>
+                                <IonCol>
+                                    <IonInput
+                                        fill="outline" 
+                                        label="Email" 
+                                        labelPlacement="floating" 
+                                        placeholder=" Enter Your Email"
+                                        required
+                                        value={email}
+                                        onIonChange={(e) => setEmail(e.detail.value!)}
+                                        style={{
+                                            '--highlight-color-focused': '#c48ace',
+                                            '--highlight-color': '#8e5a9e',
+                                            color: '#444',
+                                            marginTop: '1rem',
+                                        }}
+                                    />
+                                </IonCol>
+                            </IonRow>
+
+                            {/*input fields for password*/}
+                            <IonRow>
+                                <IonCol>
+                                    <IonInput
+                                        fill="outline" 
+                                        label="Password" 
+                                        type='password'
+                                        labelPlacement="floating" 
+                                        placeholder=" Enter Your Password"
+                                        required
+                                        value={password}
+                                        onIonChange={(e) => setPassword(e.detail.value!)}
+                                        style={{
+                                            '--highlight-color-focused': '#c48ace',
+                                            '--highlight-color': '#8e5a9e',
+                                            color: '#444',
+                                            marginTop: '1rem',
+                                        }}
+                                    >
+                                        <IonInputPasswordToggle slot="end" />
                                     </IonInput>
-                                    <IonInput className='ion-margin-top' fill="outline"  label="First Name" labelPlacement="floating" value=""
-                                        placeholder=" Enter Your First Name">
+                                </IonCol>
+
+                                <IonCol>
+                                    <IonInput
+                                        fill="outline" 
+                                        label="Confirm Password" 
+                                        type='password'
+                                        labelPlacement="floating" 
+                                        placeholder=" Confirm Your Password"
+                                        required
+                                        value={confirmPassword}
+                                        onIonChange={(e) => setConfirmPassword(e.detail.value!)}
+                                        style={{
+                                            '--highlight-color-focused': '#c48ace',
+                                            '--highlight-color': '#8e5a9e',
+                                            color: '#444',
+                                            marginTop: '1rem',
+                                        }}
+                                    >
+                                        <IonInputPasswordToggle slot="end" />
                                     </IonInput>
-                                    <IonInput className='ion-margin-top' fill="outline"  label="Last Name" labelPlacement="floating" value=""
-                                        placeholder=" Enter Your Last Name">
-                                    </IonInput>
-                                    <IonInput className='ion-margin-top' fill="outline" type="number" label="Age" labelPlacement="floating" value=""
-                                        placeholder=" Enter Your Age">
-                                    </IonInput>
-                                    <IonInput className='ion-margin-top' fill="outline"  label="Address" labelPlacement="floating" value=""
-                                        placeholder=" Enter Your Address">
-                                    </IonInput>
-                                    <IonInput className='ion-margin-top' fill="outline" type="email" label="Email" labelPlacement="floating" value=""
-                                        placeholder=" Enter Your Email">
-                                    </IonInput>
-                                    <IonInput className='ion-margin-top' fill="outline" type="password" label="Password" labelPlacement="floating" value=""
-                                        placeholder="Enter Your Password">
-                                            <IonInputPasswordToggle slot="end" color={'dark'}></IonInputPasswordToggle>
-                                    </IonInput>
-                                    <IonInput className='ion-margin-top' fill="outline" type="password" label="Confirm Password" labelPlacement="floating" value=""
-                                        placeholder="Confirm Your Password">
-                                            <IonInputPasswordToggle slot="end" color={'dark'}></IonInputPasswordToggle>
-                                    </IonInput>
-                                    <IonButton className='ion-margin-top' expand="block" shape='round' color='primary'>
-                                        Register
+                                </IonCol>
+                            </IonRow>
+
+                            {/*Register button*/}
+                            <IonRow>
+                                <IonCol>
+                                    <IonButton
+                                        expand="block"
+                                        onClick={handleVerification}
+                                        style={{
+                                            '--background': '#c48ace',
+                                            '--background-activated': '#8e5a9e',
+                                            marginTop: '1rem',
+                                        }}
+                                    >
+                                        Sign Up
                                     </IonButton>
-                                </IonCardContent>
-                            </IonCard>
-                        </IonCol>
-                    </IonRow>
-                </IonGrid>
+                                </IonCol>
+                            </IonRow>
+                        </IonGrid>
+
+                        {/*modal for verification */}
+                        <IonModal isOpen={showVerifycationModal} onDidDismiss={() => setShowVerifycationModal(false)}>
+                            <IonContent>
+                                <IonCard>
+                                    <IonCardHeader>
+                                        <IonCardTitle>Confirm the details</IonCardTitle>
+                                        <hr />
+                                        <IonCardSubtitle>Username</IonCardSubtitle>
+                                        <IonCardTitle>{username}</IonCardTitle>
+
+                                        <IonCardSubtitle>Email</IonCardSubtitle>
+                                        <IonCardTitle>{email}</IonCardTitle>
+
+                                        <IonCardSubtitle>name</IonCardSubtitle>
+                                        <IonCardTitle>{FirstName} {LastName}</IonCardTitle>
+
+                                    </IonCardHeader>
+                                    <IonCardContent>
+                                        <IonRow>
+                                            <IonCol>
+                                                <IonButton
+                                                    expand="block"
+                                                    onClick={handleSignup}
+                                                    style={{
+                                                        '--background': '#c48ace',
+                                                        '--background-activated': '#8e5a9e',
+                                                        marginTop: '1rem',
+                                                    }}
+                                                >
+                                                    confirm
+                                                </IonButton>
+                                            </IonCol>
+                                            <IonCol>
+                                                <IonButton
+                                                    expand="block"
+                                                    onClick={() => setShowVerifycationModal(false)}
+                                                    style={{
+                                                        '--background': '#e93740ff',
+                                                        '--background-activated': '#8e5a9e',
+                                                        marginTop: '1rem',
+                                                    }}
+                                                >
+                                                    Cancel
+                                                </IonButton>
+                                            </IonCol>
+                                        </IonRow>
+                                    </IonCardContent>
+                                </IonCard>
+                            </IonContent>
+                        </IonModal>
+
+                        {/*modal for successful Creating account */}
+                        <IonModal isOpen={showSuccessModal} onDidDismiss={() => setShowSuccessModal(false)}>
+                            <IonContent>
+                                <IonTitle>Account created successfully</IonTitle>
+                                <IonText>Redirecting to Login page...</IonText>
+                                <IonButton routerLink='/login' routerDirection='back'>Login</IonButton>
+
+                            </IonContent>
+                        </IonModal>
+                    </IonCardContent>
+                </IonCard>
+                
+                 <AlertBox message={errorMessage} isOpen={showAlert} onClose={() => setShowAlert(false)} />
             </IonContent>
         </IonPage>
     );

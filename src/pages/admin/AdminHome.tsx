@@ -215,7 +215,7 @@ const AdminHome: React.FC = () => {
                                         )}
                                     </IonItem>
                                 ))}
-                            </IonList>
+                            
 
                             {/* Logout Button */}
                             <IonItem
@@ -248,6 +248,7 @@ const AdminHome: React.FC = () => {
                                             transition: 'margin 0.3s ease-in-out',
                                         }} 
                                     />
+
                                 </div>
 
                                 {isHovered && (
@@ -266,6 +267,7 @@ const AdminHome: React.FC = () => {
                                         )}
                                 
                             </IonItem>
+                            </IonList>
                         </div>
 
                         {/* Main Content */}

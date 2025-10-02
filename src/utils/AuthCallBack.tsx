@@ -19,7 +19,7 @@ const AuthCallback: React.FC = () => {
       return;
     }    // Check if user already exists
     const { data: existingAccount, error: fetchError } = await supabase
-      .from("accounts")
+      .from("users")
       .select("role, auth_id")
       .eq("email", user.email)
       .maybeSingle();
@@ -33,7 +33,7 @@ const AuthCallback: React.FC = () => {
     // If account exists but auth_id is not set, update it
     if (existingAccount && !existingAccount.auth_id) {
       const { error: updateError } = await supabase
-        .from("accounts")
+        .from("users")
         .update({ auth_id: user.id })
         .eq("email", user.email);
 
@@ -46,7 +46,7 @@ const AuthCallback: React.FC = () => {
 
     // Insert only if new
     if (!existingAccount) {
-      const { error: insertError } = await supabase.from("accounts").insert([
+      const { error: insertError } = await supabase.from("users").insert([
         {
           username:
             user.user_metadata?.full_name ||
@@ -67,7 +67,7 @@ const AuthCallback: React.FC = () => {
 
     // Fetch role again safely
     const { data: accountWithRole } = await supabase
-      .from("accounts")
+      .from("users")
       .select("role")
       .eq("email", user.email)
       .maybeSingle();
