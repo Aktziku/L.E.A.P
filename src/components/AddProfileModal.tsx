@@ -13,20 +13,29 @@ import {
     IonSelect,
     IonSelectOption,
     IonCardHeader,
-    IonCardTitle
+    IonCardTitle,
+    useIonActionSheet,
+    IonRow,
+    IonCol,
+    IonGrid,
+    IonItemGroup,
+    IonItemDivider
 } from '@ionic/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../utils/supabaseClients';
 
 interface Profile {
     profileid: number;
-    fullname: string;
+    firstname: string;
+    lastname: string;
     age: number;
     birthdate: string;
     gender: string;
     email: string;
     contactnum: string;
-    address: string;
+    barangay: string,
+    minicipality: string,
+    province: string,
     school: string;
     schoollevel: string;
 }
@@ -41,24 +50,30 @@ interface AddProfileModalProps {
 
 const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSave, profileToEdit, isEditing }) => {
     const [originalForm, setOrignalForm] = useState<Omit<Profile, 'profileid'>>({
-        fullname: '',
+        firstname: '',
+        lastname:'',
         age: 0,
         birthdate: '',
         gender: '',
         email: '',
         contactnum: '',
-        address: '',
+        barangay: '',
+        minicipality: '',
+        province: '',
         school: '',
         schoollevel: ''
     });
     const [formData, setFormData] = useState<Omit<Profile, 'profileid'>>({
-        fullname: '',
+        firstname: '',
+        lastname:'',
         age: 0,
         birthdate: '',
         gender: '',
         email: '',
         contactnum: '',
-        address: '',
+        barangay: '',
+        minicipality: '',
+        province: '',
         school: '',
         schoollevel: ''
     });
@@ -70,13 +85,16 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
             setOrignalForm(rest);
         } else {
             const emptyForm ={
-                fullname: '',
+                firstname: '',
+                lastname:'',
                 age: 0,
                 birthdate: '',
+                barangay: '',
+                minicipality: '',
+                province: '',
                 gender: '',
                 email: '',
                 contactnum: '',
-                address: '',
                 school: '',
                 schoollevel: ''
             };
@@ -113,28 +131,39 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
     const handleReset = () => {
         setFormData(originalForm);
     };
+  const handleChange = (key: keyof typeof formData, value: any) => {
+    setFormData({ ...formData, [key]: value });
+  };
 
+  const handleSubmit = () => {
+    console.log("Form Submitted:", formData);
+  };
     const handleClear = () => {
         setFormData({
-        fullname: '',
+        firstname: '',
+        lastname:'',
         age: 0,
         birthdate: '',
         gender: '',
         email: '',
         contactnum: '',
-        address: '',
+        barangay: '',
+        minicipality: '',
+        province: '',
         school: '',
         schoollevel: ''
         });
     };
 
+
+
     return (
-        <IonModal isOpen={isOpen} onDidDismiss={onClose}>
+        <IonModal isOpen={isOpen} onDidDismiss={onClose} style={{'--width':'1400px','--height':'700px'}} >
             <IonHeader>
 
                 <IonToolbar
                     style={{
-                        '--background': 'linear-gradient(90deg, #c48ace, #f8adc6)',
+                        '--background': '#002d54',
                         color: '#fff',
                     }}
                 >
@@ -152,7 +181,7 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
                         onClick={onClose}
                         style={{
                             '--background': '#fff',
-                            '--color': '#c48ace',
+                            '--color': '#000000ff',
                             borderRadius: '8px',
                             marginRight: '10px',
                             fontWeight: 'bold',
@@ -164,452 +193,182 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent
-                style={{
-                    '--background': 'linear-gradient(135deg, #c48ace, #f8adc6)',
-                    padding: '20px',
-                }}
-            >
+               <IonContent>
+                    <IonGrid>
+                    {/* Personal Information */}
+                    <IonItemGroup>
+                        <IonItemDivider style={{ fontSize: "large", marginTop: "10px" }}>
+                        Personal Information
+                        </IonItemDivider>
 
-                    <IonCard
-                        style={{
-                            borderRadius: '16px',
-                            padding: '20px',
-                            background: '#fff',
-                            boxShadow: '0 4px 12px rgba(196, 138, 206, 0.25)',
-                        }}
-                        >
-
-                        <IonCardContent>
-                            {/* Basic Information */}
-                            <h2 style={{ 
-                                fontSize: '1rem', 
-                                fontWeight: 'bold', 
-                                margin: '20px 0 10px',
-                                color: '#8e5a9e',
-                                }}
-                            >
-                            Basic Information
-                            </h2>
-
-                            <div style={{ 
-                                display: 'grid', 
-                                gridTemplateColumns: '1fr 1fr', 
-                                gap: '12px' 
-                                }}
-                            >
-                                {/* Full Name */}
-                            <IonItem
-                                lines='none'
-                                style={{
-                                    borderRadius: '8px',
-                                    border: '1px solid #e6d6eb',
-                                    marginBottom: '12px',
-                                    padding: '4px 8px',
-                                    boxShadow: '0 2px 6px rgba(196, 138, 206, 0.1)',
-                                    '--highlight-color-focused': '#c48ace', 
-                                    '--highlight-color-valid': '#8e5a9e',   
-                                    '--highlight-color-invalid': '#f8adc6',
-                                    '--background': '#fff',
-                                }}
-                            >
-                                <IonInput
-                                    label="Full Name"
-                                    labelPlacement="floating"
-                                    type="text"
-                                    value={formData.fullname}
-                                    onIonChange={e => handleInputChange('fullname', e.detail.value)}
-                                    style={{
-                                        '--padding-start': '8px',
-                                        '--padding-end': '8px',
-                                        fontSize: '0.95rem',
-                                        '--highlight-color-focused': '#c48ace',
-                                        '--highlight-color': '#8e5a9e',
-                                        color: '#353434ff', 
-                                        '--background': '#fff',
-                                        'border': 'none',
-                                    }}  
-                                />
-                            </IonItem>
-
-                                {/* Gender */}
-                            <IonItem 
-                                lines='none'
-                                style={{
-                                    borderRadius: '8px',
-                                    border: '1px solid #e6d6eb',
-                                    marginBottom: '12px',
-                                    padding: '4px 8px',
-                                    boxShadow: '0 2px 6px rgba(196, 138, 206, 0.1)',
-                                    '--highlight-color-focused': '#c48ace', 
-                                    '--highlight-color-valid': '#8e5a9e',   
-                                    '--highlight-color-invalid': '#f8adc6',
-                                    '--background': '#fff',
-                                }}
-                            >
-                                <IonSelect
-                                    label="Gender"
-                                    labelPlacement="floating"
-                                    value={formData.gender}
-                                    onIonChange={e => handleInputChange('gender', e.detail.value)}
-                                    style={{
-                                        '--padding-start': '8px',
-                                        '--padding-end': '8px',
-                                        fontSize: '0.95rem',
-                                        '--highlight-color-focused': '#c48ace',
-                                        '--highlight-color': '#8e5a9e',
-                                        color: '#353434ff', 
-                                        '--background': '#fff',
-                                        'border': 'none',
-                                    }}  
-                                >
-                                    <IonSelectOption value="Male">Male</IonSelectOption>
-                                    <IonSelectOption value="Female">Female</IonSelectOption>
-                                </IonSelect>
-                            </IonItem>
-
-                                {/* Age */}
-                            <IonItem 
-                                lines='none'
-                                style={{
-                                    borderRadius: '8px',
-                                    border: '1px solid #e6d6eb',
-                                    marginBottom: '12px',
-                                    padding: '4px 8px',
-                                    boxShadow: '0 2px 6px rgba(196, 138, 206, 0.1)',
-                                    '--highlight-color-focused': '#c48ace', 
-                                    '--highlight-color-valid': '#8e5a9e',   
-                                    '--highlight-color-invalid': '#f8adc6',
-                                    '--background': '#fff',
-                                }}
-                            >                   
-                                <IonInput
-                                    label="Age"
-                                    labelPlacement="floating"
-                                    type="number"
-                                    value={formData.age}
-                                    onIonChange={e => handleInputChange('age', e.detail.value)}
-                                    style={{
-                                        '--padding-start': '8px',
-                                        '--padding-end': '8px',
-                                        fontSize: '0.95rem',
-                                        '--highlight-color-focused': '#c48ace',
-                                        '--highlight-color': '#8e5a9e',
-                                        color: '#353434ff', 
-                                        '--background': '#fff',
-                                        'border': 'none',
-                                    }}  
-                                />
-                            </IonItem>
-
-                                {/* Birthdate */}
-                            <IonItem 
-                                lines='none'
-                                style={{
-                                    borderRadius: '8px',
-                                    border: '1px solid #e6d6eb',
-                                    marginBottom: '12px',
-                                    padding: '4px 8px',
-                                    boxShadow: '0 2px 6px rgba(196, 138, 206, 0.1)',
-                                    '--highlight-color-focused': '#c48ace', 
-                                    '--highlight-color-valid': '#8e5a9e',   
-                                    '--highlight-color-invalid': '#f8adc6',
-                                    '--background': '#fff',
-                                }}
-                            >
-                                <IonInput
-                                    label="Birthdate"
-                                    labelPlacement="floating"
-                                    type="date"
-                                    value={formData.birthdate}
-                                    onIonChange={e => handleInputChange('birthdate', e.detail.value)}
-                                    style={{
-                                        '--padding-start': '8px',
-                                        '--padding-end': '8px',
-                                        fontSize: '0.95rem',
-                                        '--highlight-color-focused': '#c48ace',
-                                        '--highlight-color': '#8e5a9e',
-                                        color: '#353434ff', 
-                                        '--background': '#fff',
-                                        'border': 'none',
-                                    }}  
-                                />
-                            </IonItem>
-                            </div>
-
-                            {/* Contact Information */}
-                            <h2 style={{ 
-                                fontSize: '1rem', 
-                                fontWeight: 'bold', 
-                                margin: '20px 0 10px',
-                                color: '#8e5a9e',
-                                }}
-                            >
-                            Contact Information
-                            </h2>
-                            
-                            {/* Address */}
-                            <IonItem  
-                                lines='none'
-                                style={{ 
-                                    marginBottom: '12px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #e6d6eb',
-                                    padding: '4px 8px',
-                                    boxShadow: '0 2px 6px rgba(196, 138, 206, 0.1)',
-                                    '--highlight-color-focused': '#c48ace', 
-                                    '--highlight-color-valid': '#8e5a9e',   
-                                    '--highlight-color-invalid': '#f8adc6',
-                                    '--background': '#fff',
-                                }}
-                            >
+                        <IonRow>
+                        <IonCol>
+                            <IonItem lines="none">
                             <IonInput
-                                    label="Address"
-                                    labelPlacement="floating"
-                                    type="text"
-                                    value={formData.address}
-                                    onIonChange={e => handleInputChange('address', e.detail.value)}
-                                    style={{
-                                        '--padding-start': '8px',
-                                        '--padding-end': '8px',
-                                        fontSize: '0.95rem',
-                                        '--highlight-color-focused': '#c48ace',
-                                        '--highlight-color': '#8e5a9e',
-                                        color: '#353434ff', 
-                                        '--background': '#fff',
-                                        'border': 'none',
-                                    }}  
+                                className="ion-margin-top"
+                                label="First Name"
+                                labelPlacement="floating"
+                                fill="outline"
+                                value={formData.firstname}
+                                onIonChange={(e) => handleChange("firstname", e.detail.value!)}
                             />
                             </IonItem>
-
-                            {/* Contact Number and email div */}
-                            <div style={{ 
-                                display: 'grid', 
-                                gridTemplateColumns: '1fr 1fr', 
-                                gap: '12px' 
-                                }}
-                            >
-                                {/* Contact Number */}
-                            <IonItem 
-                                lines='none'
-                                style={{ 
-                                    marginBottom: '12px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #e6d6eb',
-                                    padding: '4px 8px',
-                                    boxShadow: '0 2px 6px rgba(196, 138, 206, 0.1)',
-                                    '--highlight-color-focused': '#c48ace', 
-                                    '--highlight-color-valid': '#8e5a9e',   
-                                    '--highlight-color-invalid': '#f8adc6',
-                                    '--background': '#fff',
-                                }}
-                            >
-                                <IonInput
-                                    label="Contact Number"
-                                    labelPlacement="floating"
-                                    type="tel"
-                                    value={formData.contactnum}
-                                    onIonChange={e => handleInputChange('contactnum', e.detail.value)}
-                                    style={{
-                                        '--padding-start': '8px',
-                                        '--padding-end': '8px',
-                                        fontSize: '0.95rem',
-                                        '--highlight-color-focused': '#c48ace',
-                                        '--highlight-color': '#8e5a9e',
-                                        color: '#353434ff', 
-                                        '--background': '#fff',
-                                        'border': 'none',
-                                    }}  
-                                />
+                        </IonCol>
+                        <IonCol>
+                            <IonItem lines="none">
+                            <IonInput
+                                className="ion-margin-top"
+                                label="Last Name"
+                                labelPlacement="floating"
+                                fill="outline"
+                                value={formData.lastname}
+                                onIonChange={(e) => handleChange("lastname", e.detail.value!)}
+                            />
                             </IonItem>
+                        </IonCol>
+                        </IonRow>
 
-                                {/* Email */}
-                            <IonItem 
-                                lines='none'
-                                style={{ 
-                                    marginBottom: '12px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #e6d6eb',
-                                    padding: '4px 8px',
-                                    boxShadow: '0 2px 6px rgba(196, 138, 206, 0.1)',
-                                    '--highlight-color-focused': '#c48ace', 
-                                    '--highlight-color-valid': '#8e5a9e',   
-                                    '--highlight-color-invalid': '#f8adc6',
-                                    '--background': '#fff',
-                                }}
-                            >
-                                <IonInput
-                                    label="Email (optional)"
-                                    labelPlacement="floating"
-                                    type="email"
-                                    value={formData.email}
-                                    onIonChange={e => handleInputChange('email', e.detail.value)}
-                                    style={{
-                                        '--padding-start': '8px',
-                                        '--padding-end': '8px',
-                                        fontSize: '0.95rem',
-                                        '--highlight-color-focused': '#c48ace',
-                                        '--highlight-color': '#8e5a9e',
-                                        color: '#353434ff', 
-                                        '--background': '#fff',
-                                        'border': 'none',
-                                    }}  
-                                />
+                        <IonRow>
+                        <IonCol>
+                            <IonItem lines="none" >
+                            <IonInput
+                                className="ion-margin-top"
+                                label="Age"
+                                type="number"
+                                labelPlacement="floating"
+                                fill="outline"
+                                value={formData.age}
+                                onIonChange={(e) => handleChange("age", Number(e.detail.value))}
+                            />
                             </IonItem>
-                            </div>
+                        </IonCol>
+                        <IonCol>
+                            <IonItem lines="none">
+                            <IonInput
+                                className="ion-margin-top"
+                                label="Birthdate"
+                                type="date"
+                                labelPlacement="floating"
+                                fill="outline"
+                                value={formData.birthdate}
+                                onIonChange={(e) => handleChange("birthdate", e.detail.value!)}
+                            />
+                            </IonItem>
+                        </IonCol>
+                        </IonRow>
+                    </IonItemGroup>
 
-                            {/* Educational Background */}
-                            <h2 style={{ 
-                                fontSize: '1rem', 
-                                fontWeight: 'bold', 
-                                margin: '20px 0 10px',
-                                color: '#8e5a9e',
-                                }}
-                            >
-                            Educational Background
-                            </h2>
+                    {/* Address Information */}
+                    <IonItemGroup>
+                        <IonItemDivider style={{ fontSize: "large", marginTop: "10px" }}>
+                        Address Information
+                        </IonItemDivider>
 
-                            <div style={{ 
-                                display: 'grid', 
-                                gridTemplateColumns: '1fr 1fr', 
-                                gap: '12px' 
-                                }}
+                        <IonRow>
+                        <IonCol>
+                            <IonItem lines="none">
+                            <IonInput
+                                className="ion-margin-top"
+                                label="Barangay"
+                                labelPlacement="floating"
+                                fill="outline"
+                                value={formData.barangay}
+                                onIonChange={(e) => handleChange("barangay", e.detail.value!)}
+                            />
+                            </IonItem>
+                        </IonCol>
+                        <IonCol>
+                            <IonItem lines="none">
+                            <IonInput
+                                className="ion-margin-top"
+                                label="Municipality"
+                                labelPlacement="floating"
+                                fill="outline"
+                                value={formData.minicipality}
+                                onIonChange={(e) => handleChange("minicipality", e.detail.value!)}
+                            />
+                            </IonItem>
+                        </IonCol>
+                        </IonRow>
+
+                        <IonRow>
+                        <IonCol>
+                            <IonItem lines="none">
+                            <IonInput
+                                className="ion-margin-top"
+                                label="Province"
+                                labelPlacement="floating"
+                                fill="outline"
+                                value={formData.province}
+                                onIonChange={(e) => handleChange("province", e.detail.value!)}
+                            />
+                            </IonItem>
+                        </IonCol>
+                        <IonCol>
+                            <IonItem lines="none">
+                            <IonInput
+                                className="ion-margin-top"
+                                label="Contact Number"
+                                labelPlacement="floating"
+                                fill="outline"
+                                type="tel"
+                                value={formData.contactnum}
+                                onIonChange={(e) => handleChange("contactnum", e.detail.value!)}
+                            />
+                            </IonItem>
+                        </IonCol>
+                        </IonRow>
+                    </IonItemGroup>
+
+                    {/* Educational Background (your example) */}
+                    <IonItemGroup>
+                        <IonItemDivider style={{ fontSize: "large", marginTop: "10px" }}>
+                        Educational Background
+                        </IonItemDivider>
+
+                        <IonRow>
+                        <IonCol>
+                            <IonItem lines="none">
+                            <IonInput
+                                className="ion-margin-top"
+                                label="School Name"
+                                labelPlacement="floating"
+                                fill="outline"
+                                value={formData.school}
+                                onIonChange={(e) => handleChange("school", e.detail.value!)}
+                            />
+                            </IonItem>
+                        </IonCol>
+                        <IonCol>
+                            <IonItem lines="none">
+                            <IonSelect
+                                className="ion-margin-top"
+                                label="Educational Attainment"
+                                labelPlacement="floating"
+                                fill="outline"
+                                value={formData.schoollevel}
+                                onIonChange={(e) => handleChange("schoollevel", e.detail.value!)}
                             >
-                                {/* School Level */}
-                            <IonItem
-                                lines='none'
-                                style={{ 
-                                    marginBottom: '12px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #e6d6eb',
-                                    padding: '4px 8px',
-                                    boxShadow: '0 2px 6px rgba(196, 138, 206, 0.1)',
-                                    '--highlight-color-focused': '#c48ace', 
-                                    '--highlight-color-valid': '#8e5a9e',   
-                                    '--highlight-color-invalid': '#f8adc6',
-                                    '--background': '#fff',
-                                }}
-                            >
-                                <IonSelect
-                                    label="School Level"
-                                    labelPlacement="floating"
-                                    value={formData.schoollevel}
-                                    onIonChange={e => handleInputChange('schoollevel', e.detail.value)}
-                                     style={{
-                                        '--padding-start': '8px',
-                                        '--padding-end': '8px',
-                                        fontSize: '0.95rem',
-                                        '--highlight-color-focused': '#c48ace',
-                                        '--highlight-color': '#8e5a9e',
-                                        color: '#353434ff', 
-                                        '--background': '#fff',
-                                        'border': 'none',
-                                    }}  
-                                >
                                 <IonSelectOption value="Elementary">Elementary</IonSelectOption>
-                                <IonSelectOption value="Junior High">High School</IonSelectOption>
+                                <IonSelectOption value="Junior High">Junior High</IonSelectOption>
                                 <IonSelectOption value="Senior High">Senior High</IonSelectOption>
-                                </IonSelect>
+                                <IonSelectOption value="College">College</IonSelectOption>
+                            </IonSelect>
                             </IonItem>
+                        </IonCol>
+                        </IonRow>
+                    </IonItemGroup>
+                     {/* Submit Button */}
+                    <IonRow>
+                        <IonCol>
+                        <IonButton expand="block" onClick={handleSubmit}>
+                            Submit
+                        </IonButton>
+                        </IonCol>
+                    </IonRow>
+                </IonGrid>
 
-                                {/* School Name */}
-                            <IonItem 
-                                lines='none'
-                                style={{ 
-                                    marginBottom: '12px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #e6d6eb',
-                                    padding: '4px 8px',
-                                    boxShadow: '0 2px 6px rgba(196, 138, 206, 0.1)',
-                                    '--highlight-color-focused': '#c48ace', 
-                                    '--highlight-color-valid': '#8e5a9e',   
-                                    '--highlight-color-invalid': '#f8adc6',
-                                    '--background': '#fff',
-                                }}
-                            >
-                                <IonInput
-                                    label="School Name"
-                                    labelPlacement="floating"
-                                    type="text"
-                                    value={formData.school}
-                                    onIonChange={e => handleInputChange('school', e.detail.value)}
-                                     style={{
-                                        '--padding-start': '8px',
-                                        '--padding-end': '8px',
-                                        fontSize: '0.95rem',
-                                        '--highlight-color-focused': '#c48ace',
-                                        '--highlight-color': '#8e5a9e',
-                                        color: '#353434ff', 
-                                        '--background': '#fff',
-                                        'border': 'none',
-                                    }}  
-                                />
-                            </IonItem>
-                            </div>
-
-                            {/* Buttons */}
-                            <div style={{ 
-                                display: 'flex', 
-                                justifyContent: 'center', 
-                                gap: '12px', marginTop: 
-                                '24px' 
-                                }}
-                            >
-
-                                {/* Save Button */}
-                            <IonButton
-                                type="submit"
-                                onClick={handleSave}
-                                style={{
-                                '--background': 'linear-gradient(90deg, #c48ace, #f8adc6)',
-                                borderRadius: '8px',
-                                fontWeight: 'bold',
-                                
-                                }}
-                            >
-                                Save
-                            </IonButton>
-
-                                {/*Reset and Clear Button */}
-                            {isEditing ?(
-                                <IonButton
-                                    fill="outline"
-                                    onClick={handleReset}
-                                    disabled={JSON.stringify(formData) === JSON.stringify(originalForm)}
-                                    style={{
-                                    '--color': '#c48ace',
-                                    '--border-color': '#c48ace',
-                                    borderRadius: '8px',
-                                    fontWeight: 'bold',
-                                    opacity: JSON.stringify(formData) === JSON.stringify(originalForm) ? '0.6' : '1',
-                                    pointerEvents: JSON.stringify(formData) === JSON.stringify(originalForm) ? 'none' : 'auto',
-                                    }}
-                                >
-                                    Reset
-                                </IonButton>
-
-                            ) : (
-                                <IonButton
-                                    fill="outline"
-                                    onClick={handleClear}
-                                    style={{
-                                    '--color': '#c48ace',
-                                    '--border-color': '#c48ace',
-                                    borderRadius: '8px',
-                                    fontWeight: 'bold',
-                                    }}
-                                >
-                                    Clear
-                                </IonButton>
-
-                            )}
-
-                             
-                            </div>
-                        </IonCardContent>
-                    </IonCard>
-
-            </IonContent>
+      </IonContent>
         </IonModal>
     );
 };

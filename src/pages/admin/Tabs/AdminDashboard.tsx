@@ -129,7 +129,7 @@ const AdminDashboard: React.FC = () => {
 
     return (
         <IonPage>
-            <IonContent style={{ '--background': '#f8d9f0ff' }}>
+            <IonContent style={{ '--background': '#ffffff' }}>
 
                 <div 
                     style={{ 
@@ -144,7 +144,7 @@ const AdminDashboard: React.FC = () => {
                                     title="Total Users"
                                     value={stats.totalUsers}
                                     icon={peopleOutline}
-                                    color="#f48fb1"
+                                    color="#002d54"
                                 />
                             </IonCol>
                             <IonCol size="12" sizeMd="4">
@@ -152,7 +152,7 @@ const AdminDashboard: React.FC = () => {
                                     title="Total Modules"
                                     value={stats.totalModules}
                                     icon={readerOutline}
-                                    color="#ba68c8"
+                                    color="#002d54"
                                 />
                             </IonCol>
                             <IonCol size="12" sizeMd="4">
@@ -160,7 +160,7 @@ const AdminDashboard: React.FC = () => {
                                     title="Total Quizzes"
                                     value={stats.totalQuizzes}
                                     icon={schoolOutline}
-                                    color="#7c4dff"
+                                    color="#002d54"
                                 />
                             </IonCol>
                         </IonRow>
@@ -172,12 +172,12 @@ const AdminDashboard: React.FC = () => {
                             margin: '20px 0', 
                             padding: '20px', 
                             borderRadius: '15px',
-                            background: 'linear-gradient(135deg, #c48ace, #f8adc6)',
+                            background: '#002d54',
                             }}
                         >
 
                         <IonCardHeader>
-                            <IonCardTitle style={{ color: '#5a2d6d' }}>Quiz Performance Overview</IonCardTitle>
+                            <IonCardTitle style={{ color: '#002d54' }}>Quiz Performance Overview</IonCardTitle>
                         </IonCardHeader>
                         
                         <IonCardContent style={{ 

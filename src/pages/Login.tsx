@@ -68,7 +68,7 @@ const Login: React.FC = () => {
             }
         }
 
-        router.push('/home', 'forward', 'replace');
+        router.push('/admin', 'forward', 'replace');
     };
 
     const socialLogin = async (provider: 'google' | 'facebook') => {
@@ -128,9 +128,7 @@ const Login: React.FC = () => {
                                                         height: 'clamp(100px, 20vw, 150px)', 
                                                         objectFit: 'contain',
                                                         margin: 'auto',
-                                                        display: 'block',
-                                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                                                        
+                                                        display: 'block',    
                                                     }} 
                                                 />
                                             </div>
@@ -154,9 +152,7 @@ const Login: React.FC = () => {
                                         labelPlacement="floating" 
                                         placeholder=" Enter Your Email"
                                         required
-                                        style={{
-                                            '--highlight-color-focused': '#c48ace',
-                                            '--highlight-color': '#8e5a9e',
+                                        style={{       
                                             color: '#444',
                                         }}
                                     >
@@ -174,8 +170,6 @@ const Login: React.FC = () => {
                                         placeholder="Enter Your Password"
                                         required
                                         style={{
-                                            '--highlight-color-focused': '#c48ace',
-                                            '--highlight-color': '#8e5a9e',
                                             color: '#444',
                                         }}
                                     >
@@ -189,7 +183,7 @@ const Login: React.FC = () => {
                                         expand="block" 
                                         shape='round' 
                                         style={{
-                                            '--background': 'linear-gradient(90deg, #c48ace, #f8adc6)',
+                                            '--background': '#002d54',
                                             fontWeight: 'bold',
                                             marginTop: '15px',
                                         }}
@@ -216,7 +210,6 @@ const Login: React.FC = () => {
                                         style={{
                                             marginTop: '50px ',
                                             fontSize: '0.9rem',
-                                            color: '#8e5a9e',
                                         }}
                                     >
                                     or sign in with
@@ -239,20 +232,6 @@ const Login: React.FC = () => {
                                             <IonIcon icon={logoGoogle} slot="start" />   
                                         </IonButton>
 
-                                            {/*Facebook Button */}
-                                        <IonButton 
-                                            className='ion-margin-top'  
-                                            fill="clear" 
-                                            shape='round' 
-                                            size='default'
-                                            onClick={() => socialLogin('facebook')}
-                                            style={{
-                                                '--color': '#4267B2',
-                                                fontWeight: 'bold',
-                                            }}
-                                        >
-                                            <IonIcon icon={logoFacebook} slot="start" />   
-                                        </IonButton>
                                     </form>
 
                                     <div>

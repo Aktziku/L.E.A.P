@@ -27,7 +27,7 @@ const ProfileManagement: React.FC = () => {
     const [showToast, setShowToast] = useState(false);
     const [importing, setImporting] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
-    const [editingProfile, setEditingProfile] = useState < Profile | null > (null);
+    const [editingProfile, setEditingProfile] = useState < Profile | null > ();
     const [isEditing, setIsEditing] = useState(false);
 
     // Reset loading state and fetch profiles 
@@ -117,47 +117,6 @@ const ProfileManagement: React.FC = () => {
         }
     };
 
-    const handleExcelImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        setImporting(true);
-        const reader = new FileReader();
-
-        reader.onload = async (e) => {
-            try{
-                const data = e.target?.result;
-                const workbook = XLSX.read(data, { type: 'binary' });
-                const sheetName = workbook.SheetNames[0];
-                const sheet = workbook.Sheets[sheetName];
-                const excelData: any[] = XLSX.utils.sheet_to_json(sheet);
-
-                for (const row of excelData) {
-                    const Profile = {
-                        fullname: String(row.fullname),
-                        age: parseInt(row.age),
-                        birthdate: String(row.birthdate),
-                        gender: String(row.gender),
-                        email: String(row.email),
-                        contactnum: String(row.contactnum),
-                        address: String(row.address),
-                        school: String(row.school),
-                        schoollevel: String(row.schoollevel),
-                    };
-                    await handleAddProfile(Profile);
-                }
-                setToastMessage('Profiles imported successfully');
-                setShowToast(true);
-            } catch (error) {
-                setError('Error importing profiles');
-                setToastMessage('Error importing profiles');
-                setShowToast(true);
-            } finally {
-                setImporting(false);
-            }
-        };
-                    reader.readAsBinaryString(file);
-    };
         
     {/* rendering based on loading state */}
     if (loading) {
@@ -169,7 +128,6 @@ const ProfileManagement: React.FC = () => {
                         justifyContent: 'center',
                         alignItems: 'center',
                         textAlign: 'center',
-                        '--background': '#f8d9f0ff',
                     }}
                 >
                     <div style={{
@@ -186,14 +144,14 @@ const ProfileManagement: React.FC = () => {
                             style={{
                                 width: '60px',
                                 height: '60px',
-                                color: '#c48ace'
+
                             }}
                         />
                         <IonText
                             style={{
                                 fontSize: '1.2rem',
                                 fontWeight: 'bold',
-                                color: '#5a2d6d',
+ 
                             }}
                         >
                             Loading profiles...
@@ -207,7 +165,7 @@ const ProfileManagement: React.FC = () => {
 
     return (
         <IonPage>
-            <IonContent style={{ '--background': '#f8d9f0ff' }}>
+            <IonContent style={{ '--background': '#ffffffff' }}>
 
                 <div className="ion-padding">
                     <div className="ion-margin-bottom ion-margin-top">
@@ -221,35 +179,13 @@ const ProfileManagement: React.FC = () => {
                             setEditingProfile(null);
                         }}
                         style={{
-                            '--background': '#c48ace',
+                            '--background': '#002d54',
                             color: 'white',
                             borderRadius: '12px',
                         }}
                     >
                         <IonIcon icon={addOutline} slot="start" />
-                        Add Profile
-                    </IonButton>
-
-                    <input
-                        type="file"
-                        accept=".xlsx, .xls"
-                        onChange={handleExcelImport}
-                        style={{ display: 'none' }}
-                        id="excel-upload"
-                    />
-                        {/* Button for Excel upload */}
-                    <IonButton
-                        className="ion-margin-end"
-                        onClick={() => document.getElementById('excel-upload')?.click()}
-                        disabled={importing}
-                        style={{
-                            '--background': '#f8adc6',
-                            color: 'white',
-                            borderRadius: '12px',
-                        }}
-                    >
-                        <IonIcon icon={documentAttach} slot="start" />
-                        {importing ? 'Importing...' : 'Import from Excel'}
+                        Register Profile
                     </IonButton>
             </div>
 
@@ -312,7 +248,6 @@ const ProfileManagement: React.FC = () => {
                                                 setShowAddModal(true);
                                             }}
                                             style={{
-                                                '--background':'#c48ace',
                                                 color: 'white',
                                                 felx: 1,
                                             }}
@@ -371,7 +306,6 @@ const ProfileManagement: React.FC = () => {
             isOpen = {showAddModal}
             onClose = {() => setShowAddModal(false)}
             onSave = {fetchProfiles}
-            profileToEdit = {editingProfile}
             isEditing = {isEditing}
         />
             </IonContent>

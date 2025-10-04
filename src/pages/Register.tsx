@@ -121,8 +121,6 @@ const Register: React.FC = () => {
                                         value={FirstName}
                                         onIonChange={(e) => setFirstName(e.detail.value!)}
                                         style={{
-                                            '--highlight-color-focused': '#c48ace',
-                                            '--highlight-color': '#8e5a9e',
                                             color: '#444',
                                             marginTop: '1rem'
                                         }}
@@ -138,37 +136,13 @@ const Register: React.FC = () => {
                                         value={LastName}
                                         onIonChange={(e) => setLastName(e.detail.value!)}
                                         style={{
-                                            '--highlight-color-focused': '#c48ace',
-                                            '--highlight-color': '#8e5a9e',
                                             color: '#444',
                                             marginTop: '1rem'
                                         }}
                                     />
                                 </IonCol>
                             </IonRow>
-
-                            {/*input fields for gender and birthdate*/}
-                            <IonRow>
-                                <IonCol>
-                                    <IonSelect
-                                        fill='outline'
-                                        label="Gender"
-                                        labelPlacement="floating"
-                                        value={Gender}
-                                        onIonChange={(e) => setGender(e.detail.value!)}
-                                        style={{
-                                           '--highlight-color-focused': '#c48ace',
-                                            '--highlight-color': '#8e5a9e',
-                                            color: '#444',
-                                            marginTop: '1rem'
-                                        }}  
-                                    >
-                                        <IonSelectOption value="Male">Male</IonSelectOption>
-                                        <IonSelectOption value="Female">Female</IonSelectOption>
-                                    </IonSelect>
-                                </IonCol>
-                            </IonRow>
-                            
+                       
                             {/*input fields for username*/}
                             <IonRow>
                                 <IonCol>
@@ -181,8 +155,6 @@ const Register: React.FC = () => {
                                         value={username}
                                         onIonChange={(e) => setUsername(e.detail.value!)}
                                         style={{
-                                            '--highlight-color-focused': '#c48ace',
-                                            '--highlight-color': '#8e5a9e',
                                             color: '#444',
                                             marginTop: '1rem'
                                         }}
@@ -190,27 +162,6 @@ const Register: React.FC = () => {
                                 </IonCol>
                             </IonRow>
                             
-                            {/*input fields for Address*/}
-                            <IonRow>
-                                <IonCol>
-                                    <IonInput
-                                        fill="outline" 
-                                        label="Address" 
-                                        labelPlacement="floating" 
-                                        placeholder=" Enter Your Address"
-                                        required
-                                        value={Address}
-                                        onIonChange={(e) => setAddress(e.detail.value!)}
-                                        style={{
-                                            '--highlight-color-focused': '#c48ace',
-                                            '--highlight-color': '#8e5a9e',
-                                            color: '#444',
-                                            marginTop: '1rem',
-                                        }}
-                                    />
-                                </IonCol>
-                            </IonRow>
-
                             {/*input fields for email*/}
                             <IonRow>
                                 <IonCol>
@@ -223,8 +174,6 @@ const Register: React.FC = () => {
                                         value={email}
                                         onIonChange={(e) => setEmail(e.detail.value!)}
                                         style={{
-                                            '--highlight-color-focused': '#c48ace',
-                                            '--highlight-color': '#8e5a9e',
                                             color: '#444',
                                             marginTop: '1rem',
                                         }}
@@ -245,8 +194,6 @@ const Register: React.FC = () => {
                                         value={password}
                                         onIonChange={(e) => setPassword(e.detail.value!)}
                                         style={{
-                                            '--highlight-color-focused': '#c48ace',
-                                            '--highlight-color': '#8e5a9e',
                                             color: '#444',
                                             marginTop: '1rem',
                                         }}
@@ -266,8 +213,6 @@ const Register: React.FC = () => {
                                         value={confirmPassword}
                                         onIonChange={(e) => setConfirmPassword(e.detail.value!)}
                                         style={{
-                                            '--highlight-color-focused': '#c48ace',
-                                            '--highlight-color': '#8e5a9e',
                                             color: '#444',
                                             marginTop: '1rem',
                                         }}
@@ -284,8 +229,6 @@ const Register: React.FC = () => {
                                         expand="block"
                                         onClick={handleVerification}
                                         style={{
-                                            '--background': '#c48ace',
-                                            '--background-activated': '#8e5a9e',
                                             marginTop: '1rem',
                                         }}
                                     >
