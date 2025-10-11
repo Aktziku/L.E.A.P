@@ -12,7 +12,7 @@ const AuthCallback: React.FC = () => {
         data: { user },
       } = await supabase.auth.getUser();
 
-      console.log('Auth state:', user); // Debug log
+      //console.log('Auth state:', user); // Debug log
 
       if (!user) {
         router.push("/login", "root", "replace");

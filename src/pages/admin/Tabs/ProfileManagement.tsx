@@ -9,15 +9,17 @@ import { useIonViewWillEnter } from '@ionic/react';
 
 interface Profile {
     profileid: number;
-    fullname: string;
-    age: number;
+    firstName: string;
+    lastName: string;
     birthdate: string;
-    gender: string;
-    email: string;
+    age: number;
     contactnum: string;
-    address: string;
-    school: string;
-    schoollevel: string;
+    barangay: string;
+    municipality: string;
+    province: string;
+    zipcode: string;
+    TimeCreated?: string;
+  
 }
 const ProfileManagement: React.FC = () => {
     const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -25,7 +27,6 @@ const ProfileManagement: React.FC = () => {
     const [error, setError] = useState<string | undefined>();
     const [toastMessage, setToastMessage] = useState('');
     const [showToast, setShowToast] = useState(false);
-    const [importing, setImporting] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingProfile, setEditingProfile] = useState < Profile | null > ();
     const [isEditing, setIsEditing] = useState(false);
@@ -41,7 +42,7 @@ const ProfileManagement: React.FC = () => {
         try {
             const {data, error} = await supabase
                 .from('profile')
-                .select('*');
+                .select('*'); // Specify only needed fields
 
                 if (error) {
                     setError(error.message);
@@ -49,6 +50,7 @@ const ProfileManagement: React.FC = () => {
                     setShowToast(true);
                 }
                 if (data) {
+                    console.log("Fetched profiles:", data);
                     setProfiles(data);
                 }
         }
@@ -62,61 +64,7 @@ const ProfileManagement: React.FC = () => {
         }
     };
 
-    const handleAddProfile = async ( newProfile: Omit<Profile, 'profileid'>) => {
-        try {
-            // Check current user and their role
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                setError('Not authenticated');
-                setToastMessage('You must be logged in to add profiles');
-                setShowToast(true);
-                return;
-            }
-
-            // Check if user has admin role
-            const { data: accountData, error: accountError } = await supabase
-                .from('accounts')
-                .select('role')
-                .eq('auth_id', user.id)
-                .single();
-
-            if (accountError || !accountData) {
-                setError('Could not verify admin privileges');
-                setToastMessage('Could not verify admin privileges');
-                setShowToast(true);
-                return;
-            }
-
-            if (accountData.role !== 'admin') {
-                setError('Unauthorized - Admin access required');
-                setToastMessage('You must be an admin to add profiles');
-                setShowToast(true);
-                return;
-            }
-
-            const { data, error } = await supabase
-                .from('profile')
-                .insert([newProfile])
-                .select();
-
-            if (error) {
-                setError(error.message);
-                setToastMessage('Error adding profile');
-                setShowToast(true);
-                return;
-            }
-            if (data) {
-                await fetchProfiles(); 
-                setToastMessage('Profile added successfully');
-                setShowToast(true);
-            }
-        } catch (error: any) {
-            setError(error.message);
-            setToastMessage('Error Adding Profile');
-            setShowToast(true);
-        }
-    };
-
+   
         
     {/* rendering based on loading state */}
     if (loading) {
@@ -170,144 +118,113 @@ const ProfileManagement: React.FC = () => {
                 <div className="ion-padding">
                     <div className="ion-margin-bottom ion-margin-top">
 
-                        {/*Button for adding profiles */}
-                    <IonButton
-                        className="ion-margin-end"
-                        onClick={() => {
-                            setShowAddModal(true);
-                            setIsEditing(false);
-                            setEditingProfile(null);
-                        }}
-                        style={{
-                            '--background': '#002d54',
-                            color: 'white',
-                            borderRadius: '12px',
-                        }}
-                    >
-                        <IonIcon icon={addOutline} slot="start" />
-                        Register Profile
-                    </IonButton>
-            </div>
-
-                {error && (
-                    <div className="ion-margin-bottom ion-color-danger">
-                        <IonText color="danger">{error}</IonText>
+                            {/*Button for adding profiles */}
+                        <IonButton
+                            className="ion-margin-end"
+                            onClick={() => {
+                                setShowAddModal(true);
+                                setIsEditing(false);
+                                setEditingProfile(null);
+                            }}
+                            style={{
+                                '--background': '#002d54',
+                                color: 'white',
+                                borderRadius: '12px',
+                            }}
+                        >
+                            <IonIcon icon={addOutline} slot="start" />
+                            Register Profile
+                        </IonButton>
                     </div>
-                )}
 
-            <IonGrid>
-                <IonRow>
-                    {profiles.map((profile) => (
-                        <IonCol size ="12" sizeMd="6" key={profile.profileid}>
+                    {error && (
+                        <div className="ion-margin-bottom ion-color-danger">
+                            <IonText color="danger">{error}</IonText>
+                        </div>
+                    )}
 
-                            {/* Card to display each profile */}
-                            <IonCard 
-                                style={{
-                                    borderRadius: '15px',
-                                    boxShadow: '0 4px 12px rgba(196, 138, 206, 0.3)',
-                                    background: '#ffffff',
-                                }}
-                            >
-                                <IonHeader
-                                    style={{
-                                        padding: '10px 15px',
-                                        background: '#fce9f4',
-                                        borderTopLeftRadius: '15px',
-                                        borderTopRightRadius: '15px',
-                                    }}
-                                >
-                                    <h2 style={{ margin: '0', color: '#5a2d6d', fontSize: '1.2rem' }}>{profile.fullname} </h2>
-                                </IonHeader>
-                                <IonCardContent >
-                                    <div className="profile-details">
-                                        <p><strong>Age:</strong> {profile.age}</p>
-                                        <p><strong>Birthdate:</strong> {profile.birthdate}</p>
-                                        <p><strong>Gender:</strong> {profile.gender}</p>
-                                        <p><strong>Email:</strong> {profile.email}</p>
-                                        <p><strong>Contact Number:</strong> {profile.contactnum}</p>
-                                        <p><strong>Address:</strong> {profile.address}</p>
-                                        <p><strong>School:</strong> {profile.school}</p>
-                                        <p><strong>School Level:</strong> {profile.schoollevel}</p>
-                                    </div>
-
-                                    {/*Edit and Remove Buttons */}
-                                    <div
+                    <IonGrid>
+                        <IonCard style={{ border: "1px solid #000",'--background':'#ffffffff' }}>
+                            <IonCardContent>
+                                <IonGrid>
+                                    {/* Table Header */}
+                                    <IonRow
                                         style={{
-                                            display: 'flex',
-                                            gap: '10px',
-                                            marginTop: '15px',
+                                        borderBottom: "1px solid #000",
+                                        fontWeight: "bold",
+                                        color: "#000",
                                         }}
                                     >
-                                        {/*Edit Button */}
-                                        <IonButton
-                                            size='small'
-                                            fill='solid'
-                                            onClick={() =>{
-                                                setEditingProfile(profile);
-                                                setIsEditing(true);
-                                                setShowAddModal(true);
-                                            }}
+                                        <IonCol>Name</IonCol>
+                                        <IonCol>Date Registered</IonCol>
+                                        <IonCol size="3">Action</IonCol>
+                                    </IonRow>
+                                        {/* Table Data */}
+                                    {profiles.map((profile, index) => (
+                                        <IonRow
+                                        key={index}
+                                        style={{
+                                            borderBottom:
+                                            index < profiles.length - 1
+                                                ? "1px solid #ccc"
+                                                : "none",
+                                            color: "#000",
+                                        }}
+                                        className="ion-align-items-center"
+                                        >
+                                        <IonCol>
+                                          {profile.firstName  || "No Name"} {profile.lastName || ""}
+                                          <pre style={{ fontSize: '10px', color: 'gray' }}>
+                                            ID: {profile.profileid}
+                                          </pre>
+                                        </IonCol>
+                                        <IonCol>{profile.TimeCreated  || new Date().toLocaleDateString()}</IonCol>
+                                        <IonCol size="3">
+                                            <IonButton
+                                            size="small"
+                                            fill="outline"
+                                            color="black"
                                             style={{
-                                                color: 'white',
-                                                felx: 1,
+                                                
+                                                color: "#000",
+                                                marginRight: "5px",
                                             }}
-                                        >
+                                            >
+                                            View
+                                            </IonButton>
+                                            <IonButton
+                                            size="small"
+                                            fill="outline"
+                                            color="black"
+                                            style={{ color: "#000", marginRight: "5px" }}
+                                            >
                                             Edit
-                                        </IonButton>
+                                            </IonButton>
+                                        </IonCol>
+                                        </IonRow>
+                                    ))}
+                                </IonGrid>
+                            </IonCardContent>
+                        </IonCard>
+                    </IonGrid>
+             </div>
 
-                                        {/*Remove Button */}
-                                        <IonButton
-                                            size='small'
-                                            fill='solid'
-                                            color='danger'
-                                            style={{flex: 1}}
-                                            onClick={async () => {
-                                                try {
-                                                    const {error} = await supabase
-                                                        .from('profile')
-                                                        .delete()
-                                                        .eq('profileid', profile.profileid);
+                <IonToast
+                    isOpen = {showToast}
+                    onDidDismiss = {() => setShowToast(false)}
+                    message = {toastMessage}
+                    duration = {3000}
+                    position = "bottom"
+                />
 
-                                                    if (error) {
-                                                        setToastMessage('Error deleting profile');
-                                                        setShowToast(true);
-                                                    } else {
-                                                        setToastMessage('Profile deleted successfully');
-                                                        setShowToast(true);
-                                                        fetchProfiles();
-                                                    }
-                                                } catch (error) {
-                                                    setToastMessage('Unspected error occurred');
-                                                    setShowToast(true);
-                                                }
-                                            }}
-                                        >
-                                            Remove
-                                        </IonButton>
-                                    </div>
-       
-                                </IonCardContent>
-                            </IonCard>
-                        </IonCol>
-                    ))}
-                </IonRow>
-            </IonGrid>
-        </div>
-
-        <IonToast
-            isOpen = {showToast}
-            onDidDismiss = {() => setShowToast(false)}
-            message = {toastMessage}
-            duration = {3000}
-            position = "bottom"
-        />
-
-        <AddProfileModal 
-            isOpen = {showAddModal}
-            onClose = {() => setShowAddModal(false)}
-            onSave = {fetchProfiles}
-            isEditing = {isEditing}
-        />
+                <AddProfileModal 
+                    isOpen = {showAddModal}
+                    onClose = {() => setShowAddModal(false)}
+                    onSave = {async (profileData) => {
+                      console.log("Saved profile:", profileData);
+                      await fetchProfiles();
+                    }}
+                />
             </IonContent>
         </IonPage>
     );

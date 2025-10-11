@@ -43,10 +43,9 @@ setupIonicReact();
 
 const App: React.FC = () => (
   <IonApp>
-    <IonReactRouter basename="/L.E.A.P">
+    <IonReactRouter basename="/TPMSS">
       <IonRouterOutlet>
-        <Route exact path="/" component={LandingPage} />
-        <Route exact path="/login" component={Login} />
+        <Route exact path="/" component={Login} />
         <Route exact path="/register" component={Register} />
         <Route exact path="/auth/callback" component={AuthCallBack} />
         <Route  path="/admin" component={AdminHome} />

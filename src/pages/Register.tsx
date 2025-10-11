@@ -1,5 +1,5 @@
-import { IonAlert, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonCol, IonContent, IonGrid, IonHeader, IonInput, IonInputPasswordToggle, IonModal, IonPage, IonRow, IonSelect, IonSelectOption, IonText, IonTitle, IonToolbar } from '@ionic/react';
-import React, { useState } from 'react';
+import { IonAlert, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonCol, IonContent, IonGrid, IonHeader, IonInput, IonInputPasswordToggle, IonModal, IonPage, IonRow, IonSelect, IonSelectOption, IonText, IonTitle, IonToolbar, useIonRouter } from '@ionic/react';
+import React, { use, useState } from 'react';
 import { supabase } from '../utils/supabaseClients';
 import bcrypt from 'bcryptjs';
 
@@ -28,6 +28,8 @@ const Register: React.FC = () => {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [Address, setAddress] = useState('');
     const [Gender, setGender] = useState('');
+    const router = useIonRouter();
+    
 
     {/*function for account verification*/}
     const handleVerification = () => {
@@ -42,25 +44,45 @@ const Register: React.FC = () => {
     {/*function to handle account creation*/}
     const handleSignup = async () => {
          setShowVerifycationModal(false);
-        try {
-            const {data, error} = await supabase.auth.signUp({ email, password},);
+         try {
+        // Sign up in Supabase authentication first
+        const { data: authData, error: authError } = await supabase.auth.signUp({ 
+            email, 
+            password,
+            options: {
+                data: {
+                    username,
+                    firstName: FirstName,
+                    lastName: LastName
+                }
+            }
+        });
 
-            if (error) {
-                throw new Error ("Account creation failed" + error.message);
+        if (authError) {
+            throw new Error("Account creation failed: " + authError.message);
+        }
+
+        if (authData.user) {
+            // Store user data in users table with auth_id
+            const { error: insertError } = await supabase.from("users").insert([
+                {
+                    auth_id: authData.user.id,
+                    username: username,
+                    email: email,
+                    firstName: FirstName,
+                    lastName: LastName,
+                    role: 'user' // Set default role
+                }
+            ]);
+
+            if (insertError) {
+                throw new Error("Failed to save user data: " + insertError.message);
             }
 
-           const profileData = {
-                username,
-                firstName: FirstName,
-                lastName: LastName,
-                email,
-            };
-
-            localStorage.setItem("pendingProfile", JSON.stringify(profileData));
-
-            setErrorMessage("Please check your email to confirm your account before logging in.");
-            setShowAlert(true);
-   
+            // Show success modal and redirect
+            setShowSuccessModal(true);
+            router.push('/login', 'forward', 'replace');
+        }
         } catch (err) {
             if (err instanceof Error) {
                 setErrorMessage(err.message);
@@ -240,19 +262,19 @@ const Register: React.FC = () => {
 
                         {/*modal for verification */}
                         <IonModal isOpen={showVerifycationModal} onDidDismiss={() => setShowVerifycationModal(false)}>
-                            <IonContent>
-                                <IonCard>
+                            <IonContent style={{'--background': '#ffffff'}}>
+                                <IonCard style={{'--background': '#ffffff'}}>
                                     <IonCardHeader>
-                                        <IonCardTitle>Confirm the details</IonCardTitle>
+                                        <IonCardTitle style={{'--color': '#000000ff'}}>Confirm the details</IonCardTitle>
                                         <hr />
-                                        <IonCardSubtitle>Username</IonCardSubtitle>
-                                        <IonCardTitle>{username}</IonCardTitle>
+                                        <IonCardSubtitle style={{'--color': '#000000ff'}}>Username</IonCardSubtitle>
+                                        <IonCardTitle style={{'--color': '#000000ff'}}>{username}</IonCardTitle>
 
-                                        <IonCardSubtitle>Email</IonCardSubtitle>
-                                        <IonCardTitle>{email}</IonCardTitle>
+                                        <IonCardSubtitle style={{'--color': '#000000ff'}}>Email</IonCardSubtitle>
+                                        <IonCardTitle style={{'--color': '#000000ff'}}>{email}</IonCardTitle>
 
-                                        <IonCardSubtitle>name</IonCardSubtitle>
-                                        <IonCardTitle>{FirstName} {LastName}</IonCardTitle>
+                                        <IonCardSubtitle style={{'--color': '#000000ff'}}>Name</IonCardSubtitle>
+                                        <IonCardTitle style={{'--color': '#000000ff'}}>{FirstName} {LastName}</IonCardTitle>
 
                                     </IonCardHeader>
                                     <IonCardContent>
@@ -262,8 +284,6 @@ const Register: React.FC = () => {
                                                     expand="block"
                                                     onClick={handleSignup}
                                                     style={{
-                                                        '--background': '#c48ace',
-                                                        '--background-activated': '#8e5a9e',
                                                         marginTop: '1rem',
                                                     }}
                                                 >

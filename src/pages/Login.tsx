@@ -43,32 +43,10 @@ const Login: React.FC = () => {
             return;
         }
 
-        const user = data.user;
-
-        const pendingProfile = localStorage.getItem('pendingProfile');
-        if (pendingProfile) {
-            const profile = JSON.parse(pendingProfile);
-
-            const {error: insertError} = await supabase.from('users').insert([
-                {
-                    username: profile.username,
-                    firstName: profile.firstName,
-                    lastName: profile.lastName,
-                    email: profile.email,
-                    auth_id: user.id
-                },
-            ]);
-
-            if (insertError) {
-                setErrorMessage("Failed to create account " + insertError.message);
-                setShowAlert(true);
-                return;
-            } else {
-                localStorage.removeItem('pendingProfile');
-            }
-        }
-
+        setShowToast(true);
+        setTimeout(() => {
         router.push('/admin', 'forward', 'replace');
+        }, 1000);
     };
 
     const socialLogin = async (provider: 'google' | 'facebook') => {
@@ -186,6 +164,7 @@ const Login: React.FC = () => {
                                             '--background': '#002d54',
                                             fontWeight: 'bold',
                                             marginTop: '15px',
+                                            color: '#fff',
                                         }}
                                     >
                                         Login
@@ -251,17 +230,18 @@ const Login: React.FC = () => {
                 </IonGrid>
 
                 <Alertbox 
-                    isOpen = {showToast}
-                    message = {errorMessage}
-                    onClose = {() => setShowToast(false)}
+                    isOpen={showAlert}
+                    message={errorMessage}
+                    onClose={() => setShowAlert(false)}
                 />
 
                 <IonToast
-                    isOpen = {showAlert}
+                    isOpen={showToast}
                     message="Login Successfully !!"
-                    onDidDismiss={() => setShowAlert(false)}
+                    onDidDismiss={() => setShowToast(false)}
                     duration={3000}
                     color='success'
+                    position="top"
                 />
 
             </IonContent>

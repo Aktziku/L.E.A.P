@@ -29,6 +29,7 @@ import ModulesManagement from './Tabs/ModuleManagement';
 import { supabase } from '../../utils/supabaseClients';
 import { Icon } from 'ionicons/dist/types/components/icon/icon';
 import CaseMangement from './Tabs/CaseManagement';
+import { Session } from '@supabase/supabase-js';
 
 const AdminHome: React.FC = () => {
     const [isHovered, setIsHovered] = useState(false);
@@ -53,6 +54,8 @@ const AdminHome: React.FC = () => {
         return currentTab ? currentTab.name : 'Admin Dashboard';
     };
     const fetchProfiles = async (id = "") => {
+
+        setLoading(true);
         try {
             const { data, error } = await supabase
                 .from('users')
@@ -81,10 +84,10 @@ const AdminHome: React.FC = () => {
         }
     };
     //
-    const [session, setSession] = useState(null)
+    const [session, setSession] = useState<Session | null>(null)
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session)
+             setSession(session);
         })
         const {
             data: { subscription },
@@ -94,6 +97,7 @@ const AdminHome: React.FC = () => {
         })
         return () => subscription.unsubscribe()
     }, [])
+
     // array for sidebar items
     const admin_tabs = [
         { name: 'Dashboard', url: '/admin/dashboard', icon: gridOutline },
@@ -140,18 +144,7 @@ const AdminHome: React.FC = () => {
                             slot='start'
                         >
 
-                            <IonImg
-                                className='ion-margin-left'
-                                slot='start'
-                                src={logoIonic}
-                                alt="Ionic Logo"
-                                style={{
-                                    width: 'clamp(30px, 5vw, 50px)',
-                                    height: 'auto',
-                                    marginLeft: 'clamp(8px, 2vw, 16px)',
-                                }}
-                            >
-                            </IonImg>
+                            
 
                             <IonTitle
                                 className=''

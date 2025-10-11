@@ -10,7 +10,7 @@ export default defineConfig({
     react(),
     legacy()
   ],
-  base:"/L.E.A.P/",
+  base:"/TPMSS/",
   test: {
     globals: true,
     environment: 'jsdom',

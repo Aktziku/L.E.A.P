@@ -1,7 +1,7 @@
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/react';
 import React from 'react';
 
-const AddQuizModal: React.FC = () => {
+const AddCaseModal: React.FC = () => {
 
     return (
         <IonPage>
@@ -17,4 +17,4 @@ const AddQuizModal: React.FC = () => {
     );
 };
 
-export default AddQuizModal;
+export default AddCaseModal;
