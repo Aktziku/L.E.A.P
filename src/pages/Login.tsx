@@ -55,7 +55,7 @@ const Login: React.FC = () => {
             const {error} = await supabase.auth.signInWithOAuth({
                 provider,
                 options:{
-                    redirectTo: `${window.location.origin}/L.E.A.P/auth/callback`,
+                    redirectTo: `${window.location.origin}/TPMSS/auth/callback`,
                     queryParams: {
                         prompt:'select_account',
                     },
@@ -220,7 +220,7 @@ const Login: React.FC = () => {
                                                 marginTop: '10px',
                                             }}
                                         >
-                                            Don't have an account? <a  href="/L.E.A.P/Register">Sign up</a>
+                                            Don't have an account? <a  href="/TPMSS/Register">Sign up</a>
                                         </p>
                                     </div>
                                 </IonCardContent>
