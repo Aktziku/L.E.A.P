@@ -18,18 +18,18 @@ import {
     useIonRouter
 } from '@ionic/react';
 import { Redirect, useLocation } from 'react-router-dom';
-import { documentAttachOutline, gridOutline, logoIonic, logOutOutline, peopleOutline, readerOutline, schoolOutline } from 'ionicons/icons';
+import { documentAttachOutline, gridOutline, logoIonic, logOutOutline, peopleOutline, personOutline, readerOutline, schoolOutline } from 'ionicons/icons';
 import React, { useEffect, useState } from 'react';
 import { Route } from 'react-router';
 import AdminDashboard from './Tabs/AdminDashboard';
-
 import ProfileManagement from './Tabs/ProfileManagement';
-import QuizManagement from './Tabs/QuizManagement';
-import ModulesManagement from './Tabs/ModuleManagement';
+import Education from './Tabs/Education';
 import { supabase } from '../../utils/supabaseClients';
 import { Icon } from 'ionicons/dist/types/components/icon/icon';
-import CaseMangement from './Tabs/CaseManagement';
+import CaseManagement from './Tabs/CaseManagement';
 import { Session } from '@supabase/supabase-js';
+import UserManagement from './Tabs/UserManagement';
+import HealthMonitoring from './Tabs/HealthMonitoring';
 
 const AdminHome: React.FC = () => {
     const [isHovered, setIsHovered] = useState(false);
@@ -51,7 +51,7 @@ const AdminHome: React.FC = () => {
     const getCurrentTitle = () => {
         const currentPath = location.pathname;
         const currentTab = admin_tabs.find(tab => tab.url === currentPath);
-        return currentTab ? currentTab.name : 'Admin Dashboard';
+        return currentTab ? currentTab.name : 'Dashboard';
     };
     const fetchProfiles = async (id = "") => {
 
@@ -102,11 +102,15 @@ const AdminHome: React.FC = () => {
     const admin_tabs = [
         { name: 'Dashboard', url: '/admin/dashboard', icon: gridOutline },
         { name: 'Profiling', url: '/admin/profiles', icon: peopleOutline },
-        { name: 'Health Monitoring', url: '/admin/quiz', icon: readerOutline},
-        { name: 'Education And Training', url: '/admin/modules', icon: schoolOutline },
-        { name: 'Case Management', url:'/admin/case', icon: documentAttachOutline}
+        { name: 'Health Monitoring', url: '/admin/health', icon: readerOutline},
+        { name: 'Education And Training', url: '/admin/education', icon: schoolOutline },
+        { name: 'Case Management', url:'/admin/case', icon: documentAttachOutline },
+        { name: 'User Management', url:'/admin/userManagement', icon: personOutline },
     ];
-    const member_tabs = [{ name: 'Dashboard', url: '/admin/dashboard', icon: gridOutline }, { name: 'Profile Management', url: '/admin/profiles', icon: peopleOutline },];
+    const member_tabs = [
+        { name: 'Dashboard', url: '/admin/dashboard', icon: gridOutline }, 
+        { name: 'Profile Management', url: '/admin/profiles', icon: peopleOutline },
+    ];
 
     const handleLogout = async () => {
         try {
@@ -117,7 +121,7 @@ const AdminHome: React.FC = () => {
             }
             localStorage.clear();
 
-            navigation.push('/login', 'forward', 'replace');
+            navigation.push('/', 'forward', 'replace');
         } catch (error) {
             console.error('Logout error:', error);
         }
@@ -383,9 +387,10 @@ const AdminHome: React.FC = () => {
                                 </Route>
                                 <Route exact path="/admin/dashboard" render={() => <AdminDashboard />} />
                                 <Route exact path="/admin/profiles" render={() => <ProfileManagement />} />
-                                <Route exact path="/admin/quiz" render={() => <QuizManagement />} />
-                                <Route exact path="/admin/modules" render={() => <ModulesManagement />} />
-                                <Route exact path="/admin/case" render={() => <CaseMangement />} />
+                                <Route exact path="/admin/health" render={() => <HealthMonitoring />} />
+                                <Route exact path="/admin/education" render={() => <Education />} />
+                                <Route exact path="/admin/case" render={() => <CaseManagement />} />
+                                <Route exact path="/admin/userManagement" render={() => <UserManagement />} />
                             </IonRouterOutlet>
                         </div>
                     </IonSplitPane>

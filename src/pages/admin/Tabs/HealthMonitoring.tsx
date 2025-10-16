@@ -2,15 +2,15 @@ import { IonButton, IonContent, IonHeader, IonIcon, IonImg, IonModal, IonPage, I
 import { logoIonic, searchOutline } from 'ionicons/icons';
 import React, { useEffect, useState } from 'react';
 
-const QuizManagement: React.FC = () => {
+const HealthMonitoring: React.FC = () => {
     
     return (
         <IonPage>
-            <IonContent style={{ '--background': '#f8d9f0ff' }}>
+            <IonContent style={{ '--background': '#ffffffff' }}>
                 
             </IonContent>
         </IonPage>
     );
 };
 
-export default QuizManagement;
+export default HealthMonitoring;

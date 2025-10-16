@@ -1,7 +1,6 @@
 import { IonButton, IonCard, IonCardContent, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonPage, IonRow, IonSpinner, IonText, IonTitle, IonToast, IonToolbar } from '@ionic/react';
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../../utils/supabaseClients';
-import * as XLSX from 'xlsx';
 import { addOutline, cloudUploadOutline, documentAttach, text } from 'ionicons/icons';
 import AddProfileModal from '../../../components/AddProfileModal';
 import { useIonViewWillEnter } from '@ionic/react';
@@ -20,7 +19,7 @@ interface Profile {
     zipcode: string;
     TimeCreated?: string;
   
-}
+};
 const ProfileManagement: React.FC = () => {
     const [profiles, setProfiles] = useState<Profile[]>([]);
     const [loading, setLoading] = useState(true);
@@ -30,19 +29,21 @@ const ProfileManagement: React.FC = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingProfile, setEditingProfile] = useState < Profile | null > ();
     const [isEditing, setIsEditing] = useState(false);
+    const [hasFetched, setHasFetched] = useState(false);
 
-    // Reset loading state and fetch profiles 
+    // Reset loading state 
     useIonViewWillEnter(() => {
-        setLoading(true); 
-        setProfiles([]); 
-        fetchProfiles();
+        console.log("ProfileManagement view entered");
+        setLoading(true);
+        fetchProfiles(); 
+        setHasFetched(true);
     });
 
     const fetchProfiles = async () => {
         try {
             const {data, error} = await supabase
                 .from('profile')
-                .select('*'); // Specify only needed fields
+                .select('*'); 
 
                 if (error) {
                     setError(error.message);
@@ -50,7 +51,7 @@ const ProfileManagement: React.FC = () => {
                     setShowToast(true);
                 }
                 if (data) {
-                    console.log("Fetched profiles:", data);
+                   // console.log("Fetched profiles:", data);
                     setProfiles(data);
                 }
         }
@@ -76,6 +77,7 @@ const ProfileManagement: React.FC = () => {
                         justifyContent: 'center',
                         alignItems: 'center',
                         textAlign: 'center',
+                        '--background': '#ffffffff',
                     }}
                 >
                     <div style={{
@@ -92,14 +94,14 @@ const ProfileManagement: React.FC = () => {
                             style={{
                                 width: '60px',
                                 height: '60px',
-
+                                '--color': '#002d54',
                             }}
                         />
                         <IonText
                             style={{
                                 fontSize: '1.2rem',
                                 fontWeight: 'bold',
- 
+                                color: '#002d54',
                             }}
                         >
                             Loading profiles...

@@ -52,8 +52,8 @@ const Register: React.FC = () => {
             options: {
                 data: {
                     username,
-                    firstName: FirstName,
-                    lastName: LastName
+                    userfirstName: FirstName,
+                    userlastName: LastName
                 }
             }
         });
@@ -69,8 +69,8 @@ const Register: React.FC = () => {
                     auth_id: authData.user.id,
                     username: username,
                     email: email,
-                    firstName: FirstName,
-                    lastName: LastName,
+                    userfirstName: FirstName,
+                    userlastName: LastName,
                     role: 'user' // Set default role
                 }
             ]);

@@ -51,8 +51,8 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
 
    const [educationData, setEducationData] = useState<any>({
     elementary: '',
-    highschool: '',
-    seniorhighschool: '',
+    juniorHigh: '',
+    seniorHigh: '',
     college: '',
   });
 
@@ -142,8 +142,8 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
         
         setEducationData({
           elementary: '',
-          highschool: '',
-          seniorhighschool: '',
+          juniorHigh: '',
+          seniorHigh: '',
           college: '',
         });
         
@@ -188,7 +188,7 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
     }
     
     // Education data fields
-    else if (["elementary", "highschool", "seniorhighschool", "college"].includes(field)) {
+    else if (["elementary", "juniorHigh", "seniorHigh", "college"].includes(field)) {
       setEducationData((prevData: any) => ({
         ...prevData,
         [field]: value
@@ -477,7 +477,7 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
                             fill="outline"
                             labelPlacement="floating"
                             style={{ "--color": "#000" }}
-                            onIonChange={(e) => handleChange("juniorhigh", e.detail.value!)}
+                            onIonChange={(e) => handleChange("juniorHigh", e.detail.value!)}
                         />
                         </IonItem>
                     </IonCol>

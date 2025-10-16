@@ -29,7 +29,7 @@ interface MaternalHealthData {
     pregnancy_status: string;
     medical_history: string;
     support_type: string;
-    current_stage?: string; // Optional field for current pregnancy stage
+    current_stage?: string; 
 }
 
 export async function saveCompleteProfile(
