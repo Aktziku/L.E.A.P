@@ -103,31 +103,43 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSave }) 
             </IonHeader>
 
                 <IonContent className="ion-padding" style={{ "--background": "#fff" }}>
-                        <IonCard style={{ borderRadius: "15px", boxShadow: "0 0 10px #ccc", "--background": "#fff" }}>
+                        <IonCard style={{ borderRadius: "15px", boxShadow: "0 0 10px #ccc", "--background": "#ffffff" }}>
                             <IonCardContent>
-                                <IonItem>
-                                    <IonLabel position="stacked">First Name<IonText color="danger"> *</IonText></IonLabel>
-                                    <IonInput value={UserData.userfirstName} onIonChange={(e) => handleChange("userfirstName", e.detail.value!)} />
+                                <IonItem style={{ "--background": "#fff" }}>
+                                    <IonLabel position="stacked" style={{'--color' : '#000000'}}>First Name<IonText color="danger"> *</IonText></IonLabel>
+                                    <IonInput 
+                                        value={UserData.userfirstName}
+                                        onIonChange={(e) => handleChange("userfirstName", e.detail.value!)}
+                                        style={{'--color' : '#000000'}}
+                                        />
                                 </IonItem>
-                                <IonItem>
-                                    <IonLabel position="stacked">Last Name<IonText color="danger"> *</IonText></IonLabel>
-                                    <IonInput value={UserData.userlastName} onIonChange={(e) => handleChange("userlastName", e.detail.value!)} />
+                                <IonItem style={{ "--background": "#fff" }}>
+                                    <IonLabel position="stacked" style={{'--color' : '#000000'}}>Last Name<IonText color="danger"> *</IonText></IonLabel>
+                                    <IonInput 
+                                        value={UserData.userlastName} 
+                                        onIonChange={(e) => handleChange("userlastName", e.detail.value!)}
+                                        style={{'--color' : '#000000'}}
+                                        />
                                 </IonItem>
-                                <IonItem>
-                                 <IonLabel position="stacked">User Name<IonText color="danger"> *</IonText></IonLabel>
-                                    <IonInput value={UserData.username} onIonChange={(e) => handleChange("username", e.detail.value!)} />
+                                <IonItem style={{ "--background": "#fff" }}>
+                                 <IonLabel position="stacked" style={{'--color' : '#000000'}}>User Name<IonText color="danger"> *</IonText></IonLabel>
+                                    <IonInput 
+                                        value={UserData.username} 
+                                        onIonChange={(e) => handleChange("username", e.detail.value!)} 
+                                        style={{'--color' : '#000000'}}
+                                        />
                                 </IonItem>
-                                <IonItem>
-                                    <IonLabel position="stacked">Email<IonText color="danger"> *</IonText></IonLabel>
-                                    <IonInput type="email" value={UserData.email} onIonChange={(e) => handleChange("email", e.detail.value!)} />
+                                <IonItem style={{ "--background": "#fff" }}>
+                                    <IonLabel position="stacked" style={{'--color' : '#000000'}}>Email<IonText color="danger"> *</IonText></IonLabel>
+                                    <IonInput type="email" value={UserData.email} onIonChange={(e) => handleChange("email", e.detail.value!)} style={{'--color' : '#000000'}} />
                                 </IonItem>
-                                <IonItem>
-                                    <IonLabel position="stacked">Password<IonText color="danger"> *</IonText></IonLabel>
-                                    <IonInput type="password" value={UserData.password} onIonChange={(e) => handleChange("password", e.detail.value!)} />
+                                <IonItem style={{ "--background": "#fff" }}>
+                                    <IonLabel position="stacked" style={{'--color' : '#000000'}}>Password<IonText color="danger"> *</IonText></IonLabel>
+                                    <IonInput type="password" value={UserData.password} onIonChange={(e) => handleChange("password", e.detail.value!)} style={{'--color' : '#000000'}} />
                                 </IonItem>
-                                <IonItem>
-                                    <IonLabel position="stacked">Role<IonText color="danger"> *</IonText></IonLabel>
-                                    <IonSelect value={UserData.role} onIonChange={(e) => handleChange("role", e.detail.value!)}>
+                                <IonItem style={{'--background' : '#fff', '--color':'#000000', '--background-hover':'transparent',}}>
+                                    <IonLabel position="stacked" style={{'--color' : '#000000'}}>Role<IonText color="danger"> *</IonText></IonLabel>
+                                    <IonSelect value={UserData.role} onIonChange={(e) => handleChange("role", e.detail.value!)} style={{'--color' : '#000000'}}>
                                         <IonSelectOption value="admin">Admin</IonSelectOption>
                                         <IonSelectOption value="healthworker">Health Worker</IonSelectOption>
                                         <IonSelectOption value="socialworker">Social Worker</IonSelectOption>

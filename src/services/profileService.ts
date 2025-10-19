@@ -18,6 +18,7 @@ interface ProfileData {
 
 interface EducationData {
   educationid: number;
+  profileid: number;
   elementary: string;
   juniorHigh: string;
   seniorHigh: string;
@@ -26,6 +27,7 @@ interface EducationData {
 
 interface MaternalHealthData {
     health_id: number;
+    profileid: number;
     pregnancy_status: string;
     medical_history: string;
     support_type: string;
@@ -42,35 +44,38 @@ export async function saveCompleteProfile(
     //Insert into profile table
     const { data: profileResult, error: profileError } = await supabase
       .from('profile')
-      .insert([profileData]);
+      .insert([profileData])
+      .select('profileid');
 
     if (profileError) throw profileError;
+
+    const profileid = profileResult[0].profileid;
 
     //Insert into EducationAndTraining table
     const { data: educationResult, error: educationError } = await supabase
       .from('EducationAndTraining')
-      .insert([educationData]);
+      .insert([{...educationData,profileid}]);
 
     if (educationError) {
       // Rollback profile insertion
       await supabase
         .from('profile')
         .delete()
-        .match({ profileid: profileData.profileid });
+        .match({ profileid: profileid });
       throw educationError;
     }
 
-    // 3. Insert into maternalhealthRecord table
+    //Insert into maternalhealthRecord table
     const { data: healthResult, error: healthError } = await supabase
       .from('maternalhealthRecord')
-      .insert([maternalHealthData]);
+      .insert([{...maternalHealthData, profileid}]);
 
     if (healthError) {
       // Rollback previous insertions
       await supabase
         .from('profile')
         .delete()
-        .match({ profileid: profileData.profileid });
+        .match({ profileid: profileid });
       await supabase
         .from('EducationAndTraining')
         .delete()

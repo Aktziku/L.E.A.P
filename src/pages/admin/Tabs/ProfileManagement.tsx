@@ -104,7 +104,7 @@ const ProfileManagement: React.FC = () => {
                                 color: '#002d54',
                             }}
                         >
-                            Loading profiles...
+                            Loading...
                         </IonText>
                     </div>
                 </IonContent>

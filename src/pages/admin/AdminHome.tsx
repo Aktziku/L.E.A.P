@@ -43,6 +43,7 @@ const AdminHome: React.FC = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [showToast, setShowToast] = useState(false);
     const [importing, setImporting] = useState(false);
+    
     const [userDetails, setUserDetails] = useState({
        role:"" 
     });
@@ -69,9 +70,9 @@ const AdminHome: React.FC = () => {
                 setShowToast(true);
             }
             if (data) {
-            //    / console.log(data[0])
+                //console.log(data[0])
                 setUserDetails(data[0])
-                //setProfiles(data);
+                
             }
         }
         catch (error) {
@@ -222,7 +223,7 @@ const AdminHome: React.FC = () => {
                                     marginTop: '10px'
                                 }}
                             >
-                                {userDetails.role==="admin"?admin_tabs.map((item, index) => (
+                                {userDetails.role === "admin"?admin_tabs.map((item, index) => (
                                     <IonItem
                                         key={index}
                                         routerLink={item.url}

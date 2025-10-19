@@ -99,6 +99,7 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
       
       const educationPayload = {
         educationid: educationId,
+        profileid: profileId,
         elementary: educationData.elementary || '',
         juniorHigh: educationData.juniorHigh || '',
         seniorHigh: educationData.seniorHigh || '',
@@ -107,6 +108,7 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
       
       const healthPayload = {
         health_id: healthid,
+        profileid: profileId,
         pregnancy_status: healthData.pregnancy_status || '',
         medical_history: healthData.medical_history?.join(',') || '',
         support_type: healthData.support_type?.join(',') || '',
@@ -524,7 +526,7 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
 
               <IonRow>
                 <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent',}}>
+                  <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
                     <IonSelect
                         className='ion-margin'
                         label="Pregnancy Status"
@@ -561,7 +563,11 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
                     <IonItem lines="none" style={{ "--background": "#fff", '--background-hover':'transparent', }}>
                       <IonCheckbox 
                         labelPlacement="end" 
-                        style={{ "--color": "#fff" }}
+                         style={{ '--checkbox-background': '#ffffffff',
+                                  '--checkbox-background-checked': '#ffffffff',
+                                  '--border-color': '#000000ff',
+                                  '--checkbox-icon-color': '#ffffff'
+                                }}
                         onIonChange={(e) => handleChange(`medical_${cond}`, e.detail.checked)}
                       >
                         <IonLabel style={{ color: "#000" }}>{cond}</IonLabel>
@@ -573,7 +579,11 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
                     <IonItem  lines="none" style={{ "--background": "#fff",'--background-hover':'transparent',  }}>
                       <IonCheckbox 
                         labelPlacement="end" 
-                        style={{ "--color": "#fff" }}
+                         style={{ '--checkbox-background': '#ffffffff',
+                                  '--checkbox-background-checked': '#ffffffff',
+                                  '--border-color': '#000000ff',
+                                  '--checkbox-icon-color': '#ffffff'
+                                }}
                         onIonChange={(e) => handleChange("medical_Others", e.detail.checked)}
                       >
                         <IonLabel style={{ color: "#000" }}>Others</IonLabel>
@@ -602,6 +612,11 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
                       <IonItem lines="none" style={{ "--background": "#fff",'--background-hover':'transparent',  }}>
                         <IonCheckbox 
                           labelPlacement="end"
+                          style={{ '--checkbox-background': '#ffffffff',
+                                  '--checkbox-background-checked': '#ffffffff',
+                                  '--border-color': '#000000ff',
+                                  '--checkbox-icon-color': '#ffffff'
+                                }}
                           onIonChange={(e) => handleChange(`support_${support}`, e.detail.checked)}
                         >
                           <IonLabel style={{ color: "#000" }}>{support}</IonLabel>

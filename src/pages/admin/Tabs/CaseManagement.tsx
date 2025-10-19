@@ -70,6 +70,7 @@ const CaseManagement: React.FC = () => {
                         justifyContent: 'center',
                         alignItems: 'center',
                         textAlign: 'center',
+                        '--background': '#ffffffff',
                     }}
                 >
                     <div style={{
@@ -96,7 +97,7 @@ const CaseManagement: React.FC = () => {
                                 color: '#002d54',
                             }}
                         >
-                            Loading profiles...
+                            Loading...
                         </IonText>
                     </div>
                 </IonContent>
