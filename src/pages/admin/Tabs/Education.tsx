@@ -11,7 +11,7 @@ interface EducationProps {
    programCourse: string;
    status: string;
    institutionOrCenter: string;
-   enrollmentDate: string;
+   enroll_dropout_Date: string;
    elementary: string;
    juniorHigh: string;
    seniorHigh: string;
@@ -52,7 +52,7 @@ const Education: React.FC = () => {
                     programCourse,
                     status,
                     institutionOrCenter,
-                    enrollmentDate,
+                    enroll_dropout_Date,
                     elementary,
                     juniorHigh,
                     seniorHigh,
@@ -137,7 +137,7 @@ const Education: React.FC = () => {
                 <div className="ion-padding">
                     <div className="ion-margin-bottom ion-margin-top">
 
-                        {/*Button for adding profiles */}
+                        {/*Button for adding Education Records */}
                         <IonButton
                             className="ion-margin-end"
                             onClick={() => {
@@ -178,7 +178,7 @@ const Education: React.FC = () => {
                                         <IonCol>Education/Training Type</IonCol>
                                         <IonCol>Program/Course</IonCol>
                                         <IonCol>Current Status</IonCol>
-                                        <IonCol>Date Enrolled</IonCol>
+                                        <IonCol>Date Enrolled/Dropped</IonCol>
                                         <IonCol size='3'>Action</IonCol>
                                     </IonRow>
 
@@ -204,7 +204,7 @@ const Education: React.FC = () => {
                                         <IonCol>{education.typeOfProgram || "No Program"}</IonCol>
                                         <IonCol>{education.programCourse || "No Course"}</IonCol>
                                         <IonCol>{education.status || "No Status"}</IonCol>
-                                        <IonCol>{education.enrollmentDate || "No Date"}</IonCol>
+                                        <IonCol>{education.enroll_dropout_Date || "No Date"}</IonCol>
                                         <IonCol size="3" >
                                             <IonButton
                                             size="small"

@@ -25,7 +25,6 @@ import AdminDashboard from './Tabs/AdminDashboard';
 import ProfileManagement from './Tabs/ProfileManagement';
 import Education from './Tabs/Education';
 import { supabase } from '../../utils/supabaseClients';
-import { Icon } from 'ionicons/dist/types/components/icon/icon';
 import CaseManagement from './Tabs/CaseManagement';
 import { Session } from '@supabase/supabase-js';
 import UserManagement from './Tabs/UserManagement';
@@ -36,26 +35,54 @@ const AdminHome: React.FC = () => {
     const navigation = useIonRouter();
     const location = useLocation();
 
-    //Added vars
-
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | undefined>();
     const [toastMessage, setToastMessage] = useState('');
     const [showToast, setShowToast] = useState(false);
     const [importing, setImporting] = useState(false);
     
-    const [userDetails, setUserDetails] = useState({
-       role:"" 
-    });
+    const [userDetails, setUserDetails] = useState<{role:string} | null>(null);
+
+    // array for sidebar items
+    const roleTabs: Record<string,Array<{name:string;url:string;icon:string}>> = {
+        admin: [
+            { name: 'Dashboard', url: '/admin/dashboard', icon: gridOutline },
+            { name: 'Profiling', url: '/admin/profiles', icon: peopleOutline },
+            { name: 'Health Monitoring', url: '/admin/health', icon: readerOutline},
+            { name: 'Education And Training', url: '/admin/education', icon: schoolOutline },
+            { name: 'Case Management', url:'/admin/case', icon: documentAttachOutline },
+            { name: 'User Management', url:'/admin/userManagement', icon: personOutline },
+        ],
+
+        healthworker: [ 
+            { name: 'Dashboard', url: '/admin/dashboard', icon: gridOutline }, 
+            { name: 'Health Monitoring', url: '/admin/health', icon: readerOutline},
+        ],
+        socialworker: [
+            { name: 'Dashboard', url: '/admin/dashboard', icon: gridOutline },
+            { name: 'Case Management', url: '/admin/case', icon: documentAttachOutline },
+        ],
+        school: [
+            { name: 'Dashboard', url: '/admin/dashboard', icon: gridOutline },
+            { name: 'Education And Training', url: '/admin/education', icon: schoolOutline },
+        ],
+    };
+
+    const tabsToRender = userDetails?.role ? roleTabs[userDetails.role] || [] : [];
+
+   // console.log(" Current Role:", userDetails?.role);
+   // console.log(" Available Role Keys:", Object.keys(roleTabs));
+    //console.log(" Tabs for this role:", tabsToRender);
 
     // Function to get current page title
     const getCurrentTitle = () => {
         const currentPath = location.pathname;
-        const currentTab = admin_tabs.find(tab => tab.url === currentPath);
+        const allTabs = Object.values(roleTabs).flat();
+        const currentTab = allTabs.find(tab => tab.url === currentPath);
         return currentTab ? currentTab.name : 'Dashboard';
     };
     const fetchProfiles = async (id = "") => {
-
+        if (!id) return;
         setLoading(true);
         try {
             const { data, error } = await supabase
@@ -68,11 +95,15 @@ const AdminHome: React.FC = () => {
                 setError(error.message);
                 setToastMessage('Error fetching profiles');
                 setShowToast(true);
+                setUserDetails({ role: '' });
             }
-            if (data) {
+            if (data && data.length > 0) {
                 //console.log(data[0])
-                setUserDetails(data[0])
+                setUserDetails({role:data[0].role})
                 
+            } else {
+                 console.log("No role found for auth_id:", id);
+                 setUserDetails({ role: '' });
             }
         }
         catch (error) {
@@ -98,21 +129,7 @@ const AdminHome: React.FC = () => {
         })
         return () => subscription.unsubscribe()
     }, [])
-
-    // array for sidebar items
-    const admin_tabs = [
-        { name: 'Dashboard', url: '/admin/dashboard', icon: gridOutline },
-        { name: 'Profiling', url: '/admin/profiles', icon: peopleOutline },
-        { name: 'Health Monitoring', url: '/admin/health', icon: readerOutline},
-        { name: 'Education And Training', url: '/admin/education', icon: schoolOutline },
-        { name: 'Case Management', url:'/admin/case', icon: documentAttachOutline },
-        { name: 'User Management', url:'/admin/userManagement', icon: personOutline },
-    ];
-    const member_tabs = [
-        { name: 'Dashboard', url: '/admin/dashboard', icon: gridOutline }, 
-        { name: 'Profile Management', url: '/admin/profiles', icon: peopleOutline },
-    ];
-
+    
     const handleLogout = async () => {
         try {
             const { error } = await supabase.auth.signOut();
@@ -223,52 +240,7 @@ const AdminHome: React.FC = () => {
                                     marginTop: '10px'
                                 }}
                             >
-                                {userDetails.role === "admin"?admin_tabs.map((item, index) => (
-                                    <IonItem
-                                        key={index}
-                                        routerLink={item.url}
-                                        lines='none'
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            color: 'white',
-                                            '--background': 'transparent',
-                                            '--color': 'white',
-                                            '--border-style': 'none',
-                                            '--border-width': '0',
-                                            '--inner-border-width': '0',
-                                            '--highlight-height': '0',
-                                            borderRadius: '12px',
-                                            margin: '8px 0px',
-                                        }}
-                                    >
-                                        <div>
-                                            <IonIcon
-                                                icon={item.icon}
-                                                style={{
-                                                    fontSize: '24px',
-                                                    marginRight: isHovered ? '15px' : '0px',
-                                                    color: 'white',
-                                                    transition: 'margin 0.3s ease-in-out',
-                                                }}
-                                            />
-                                        </div>
-
-                                        {isHovered && (
-                                            <IonLabel
-                                                style={{
-                                                    color: 'white',
-                                                    transition: 'width 0.3s ease-in-out, opacity 0.3s ease-in-out',
-                                                    opacity: isHovered ? 1 : 0,
-                                                    whiteSpace: 'nowrap',
-                                                    overFlow: 'hidden',
-                                                }}
-                                            >
-                                                {item.name}
-                                            </IonLabel>
-                                        )}
-                                    </IonItem>
-                                )):member_tabs.map((item, index) => (
+                                {tabsToRender.map((item, index) => (
                                     <IonItem
                                         key={index}
                                         routerLink={item.url}

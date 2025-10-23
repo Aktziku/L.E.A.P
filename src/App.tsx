@@ -34,7 +34,6 @@ import '@ionic/react/css/palettes/dark.system.css';
 import './theme/variables.css';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import LandingPage from './pages/LandingPage';
 import AdminHome from './pages/admin/AdminHome';
 import UserHome from './pages/users/UserHome';
 import AuthCallBack from './utils/AuthCallBack';

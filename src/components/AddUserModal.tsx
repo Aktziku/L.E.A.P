@@ -24,8 +24,10 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSave }) 
     };
 
     const handleSave =async () => {
+        setLoading(true);
+        setError(null);
+
         try {
-            setError(null);
 
             if (!UserData.username || !UserData.userfirstName || !UserData.userlastName || !UserData.email || !UserData.role) {
                 setError('Please fill in all required fields');
@@ -33,22 +35,41 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSave }) 
                 return;
             }
 
+            const {data: authData, error: authError} = await supabase.auth.signUp({
+                email: UserData.email,
+                password: UserData.password,
+            });
+
+            if (authError) {
+                console.error('Supabase auth error:', authError.message);
+                setError(authError.message);
+                setLoading(false);
+                return;
+            }
+
+            const auth_id = authData.user?.id;
+            console.log("Created auth user with ID:", auth_id);
+
+            if (!auth_id) {
+                setError(' Please verify your email and try again.');
+                setLoading(false);
+                return;
+            }
+
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(UserData.password, salt);
 
-            const userToSave = {
-                username: UserData.username,
-                userfirstName: UserData.userfirstName,
-                userlastName: UserData.userlastName,
-                email: UserData.email,
-                role: UserData.role,
-                password: hashedPassword,
-            };
-
             const {data, error} = await supabase
-            
                 .from('users')
-                .insert([userToSave])
+                .insert([{
+                    auth_id: auth_id,
+                    username: UserData.username,
+                    email: UserData.email,
+                    userfirstName: UserData.userfirstName,
+                    userlastName: UserData.userlastName,
+                    role: UserData.role,
+                    password: hashedPassword,
+                }])
                 .select();
 
                 if (error) {
@@ -143,7 +164,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSave }) 
                                         <IonSelectOption value="admin">Admin</IonSelectOption>
                                         <IonSelectOption value="healthworker">Health Worker</IonSelectOption>
                                         <IonSelectOption value="socialworker">Social Worker</IonSelectOption>
-                                        <IonSelectOption value="counselor">Counselor</IonSelectOption>
+                                        <IonSelectOption value="school">School Worker</IonSelectOption>
                                         <IonSelectOption value="user">User</IonSelectOption>
                                     </IonSelect>
                             </IonItem>
