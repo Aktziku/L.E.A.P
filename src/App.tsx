@@ -42,7 +42,7 @@ setupIonicReact();
 
 const App: React.FC = () => (
   <IonApp>
-    <IonReactRouter basename="/TPMSS">
+    <IonReactRouter >
       <IonRouterOutlet>
         <Route exact path="/" component={Login} />
         <Route exact path="/register" component={Register} />

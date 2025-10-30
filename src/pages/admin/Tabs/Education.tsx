@@ -67,7 +67,6 @@ const Education: React.FC = () => {
             }
 
             if (data) {
-                setEducation(data);
                 const formatted = data.map((item:any) => ({
                     ...item,
                     firstName: item.profile?.firstName || '',
@@ -149,10 +148,11 @@ const Education: React.FC = () => {
                                 '--background': '#002d54',
                                 color: 'white',
                                 borderRadius: '12px',
+                                '--fontsize': 'clamp(12px, 1.2vw, 14px)', '--padding': 'clamp(8px, 0vw, 100px)',
                             }}
                         >
                             <IonIcon icon={addOutline} slot="start" />
-                            Add Education Records
+                            Add Records
                         </IonButton>
                     </div>
 
@@ -182,53 +182,67 @@ const Education: React.FC = () => {
                                         <IonCol size='3'>Action</IonCol>
                                     </IonRow>
 
-                                        {/* Table Data */}
-                                    {Education.map((education, index) => (
-                                        <IonRow
-                                        key={index}
-                                        style={{
-                                            borderBottom:
-                                            index < Education.length - 1
-                                                ? "1px solid #ccc"
-                                                : "none",
-                                            color: "#000",
-                                        }}
-                                        className="ion-align-items-center"
-                                        >
-                                        <IonCol>
-                                            {education.firstName  || "No Name"} {education.lastName || ""}
-                                            <pre style={{ fontSize: '10px', color: 'gray' }}>
-                                            ID: {education.profileid}
-                                            </pre>
-                                        </IonCol>
-                                        <IonCol>{education.typeOfProgram || "No Program"}</IonCol>
-                                        <IonCol>{education.programCourse || "No Course"}</IonCol>
-                                        <IonCol>{education.status || "No Status"}</IonCol>
-                                        <IonCol>{education.enroll_dropout_Date || "No Date"}</IonCol>
-                                        <IonCol size="3" >
-                                            <IonButton
-                                            size="small"
-                                            fill="outline"
-                                            color="black"
-                                            style={{
-                                                
-                                                color: "#000",
-                                                marginRight: "5px",
-                                            }}
-                                            >
-                                            View
-                                            </IonButton>
-                                            <IonButton
-                                            size="small"
-                                            fill="outline"
-                                            color="black"
-                                            style={{ color: "#000", marginRight: "5px" }}
-                                            >
-                                            Edit
-                                            </IonButton>
-                                        </IonCol>
+                                    {/* Table Rows */}
+                                    {Education.length === 0 ? (
+                                        <IonRow>
+                                            <IonCol style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+                                                No education records found
+                                            </IonCol>
                                         </IonRow>
-                                    ))}
+                                    ) : (
+
+                                        Education.map((education, index) => (
+                                            <IonRow
+                                            key={index}
+                                            style={{
+                                                borderBottom:
+                                                index < Education.length - 1
+                                                    ? "1px solid #ccc"
+                                                    : "none",
+                                                color: "#000",
+                                            }}
+                                            className="ion-align-items-center"
+                                            >
+                                            <IonCol>
+                                                {education.firstName  || "No Name"} {education.lastName || ""}
+                                                <pre style={{ fontSize: '10px', color: 'gray' }}>
+                                                ID: {education.profileid}
+                                                </pre>
+                                            </IonCol>
+                                            <IonCol>{education.typeOfProgram || "No Program"}</IonCol>
+                                            <IonCol>{education.programCourse || "No Course"}</IonCol>
+                                            <IonCol>{education.status || "No Status"}</IonCol>
+                                            <IonCol>{education.enroll_dropout_Date || "No Date"}</IonCol>
+                                            <IonCol size="3" >
+                                                <IonButton
+                                                size="small"
+                                                fill="outline"
+                                                color="black"
+                                                style={{
+                                                    
+                                                    color: "#000",
+                                                    marginRight: "5px",
+                                                }}
+                                                >
+                                                View
+                                                </IonButton>
+                                                <IonButton
+                                                size="small"
+                                                fill="outline"
+                                                color="black"
+                                                style={{ color: "#000", marginRight: "5px" }}
+                                                onClick={() => {
+                                                            setIsEditing(true);
+                                                            setEditingEducation(education);
+                                                            setShowAddModal(true);
+                                                        }}
+                                                >
+                                                Edit
+                                                </IonButton>
+                                            </IonCol>
+                                            </IonRow>
+                                        ))
+                                    )}
                                 </IonGrid>
                             </IonCardContent>
                         </IonCard>

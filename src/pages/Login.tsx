@@ -55,7 +55,7 @@ const Login: React.FC = () => {
             const {error} = await supabase.auth.signInWithOAuth({
                 provider,
                 options:{
-                    redirectTo: `${window.location.origin}/TPMSS/auth/callback`,
+                    redirectTo: `${window.location.origin}/auth/callback`,
                     queryParams: {
                         prompt:'select_account',
                     },
@@ -171,19 +171,6 @@ const Login: React.FC = () => {
                                         <IonIcon icon={logIn} slot="end" />
                                     </IonButton>
                                     </form>
-                                    
-                                    {/* Forgot Password Link */}
-                                    <div>
-                                        <a href="#"
-                                           className='ion-float-right'
-                                             style={{ 
-                                                fontSize: '0.9rem',
-                                                marginTop: '10px',
-                                            }}
-                                        >
-                                            Forgot Password
-                                        </a>
-                                    </div>
 
                                     <div className="ion-text-center ion-float-center"
                                         style={{

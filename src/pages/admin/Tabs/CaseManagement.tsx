@@ -2,18 +2,17 @@ import { IonButton, IonCard, IonCardContent, IonCol, IonContent, IonGrid, IonHea
 import React, { use } from 'react';
 import { supabase } from '../../../utils/supabaseClients';
 import { addOutline } from 'ionicons/icons';
+import AddCaseModal from '../../../components/AddCaseModal';
 
 interface Case {
     caseid: number;
     profileid: number;
     case_type: string;
     case_status: string;
-    status: string;
-    councilor: string;
-    barangay_health_worker: string;
-    social_worker: string;
-    last_follow_up: string;
     case_created_by: string;
+    assigned_worker: string;
+    firstName?: string;
+    lastName?: string;
 };
 const CaseManagement: React.FC = () => {
     const [cases, setCases] = React.useState<Case[]>([]);
@@ -37,7 +36,17 @@ const CaseManagement: React.FC = () => {
         try {
             const {data, error} = await supabase
                 .from('caseManagement')
-                .select('*'); 
+                .select(`
+                    caseid,
+                    profileid,
+                    case_type,
+                    case_status,
+                    case_created_by,
+                    profile:profileid (
+                        firstName,
+                        lastName
+                    )
+                    `); 
 
                 if (error) {
                     setError(error.message);
@@ -46,7 +55,12 @@ const CaseManagement: React.FC = () => {
                 }
                 if (data) {
                    // console.log("Fetched cases:", data);
-                    setCases(data);
+                    const formatted = data.map((item:any) => ({
+                    ...item,
+                    firstName: item.profile?.firstName || '',
+                    lastName: item.profile?.lastName || '',
+                }));
+                setCases(formatted);
                 }
         }
         catch (error) {
@@ -147,19 +161,19 @@ const CaseManagement: React.FC = () => {
                                         }}
                                     >
                                         <IonCol>Name</IonCol>
-                                        <IonCol>Assigned Worker</IonCol>
-                                        <IonCol>Status</IonCol>
-                                        <IonCol>Last Follow-Up</IonCol>
+
                                         <IonCol size="3">Action</IonCol>
                                     </IonRow>
 
                                     {/* Table Rows */}
                                     {cases.map((caseItem) => (
                                         <IonRow key={caseItem.caseid} style={{ borderBottom: "1px solid #ccc", color: "#000" }}>
-                                            <IonCol>{caseItem.case_type}</IonCol>
-                                            <IonCol>{caseItem.barangay_health_worker}</IonCol>
-                                            <IonCol>{caseItem.status}</IonCol>
-                                            <IonCol>{caseItem.last_follow_up}</IonCol>
+                                            <IonCol>
+                                                {caseItem.firstName || "No Name"} {caseItem.lastName || ""}
+                                            <pre style={{ fontSize: '10px', color: 'gray' }}>
+                                            ID: {caseItem.profileid}
+                                            </pre>
+                                            </IonCol>
                                             <IonCol size="3">
                                                 
                                                 <IonButton
@@ -177,6 +191,8 @@ const CaseManagement: React.FC = () => {
                                                 <IonButton
                                                     fill="outline"
                                                     size="small"
+                                                    color="black"
+                                                    style={{ color: "#000", marginRight: "5px" }}
                                                     onClick={() => {
                                                         setIsEditing(true);
                                                         setEditingCase(caseItem);
@@ -193,6 +209,16 @@ const CaseManagement: React.FC = () => {
                         </IonCard>
                     </IonGrid>
                </div>
+               
+                <AddCaseModal
+                    isOpen={showAddModal}
+                    onClose={() => setShowAddModal(false)}
+                    onSave={async (record:any) =>{
+                        setToastMessage(isEditing ? 'Case updated successfully' : 'Case added successfully');
+                        await fetchCases();
+                        setShowAddModal(false);
+                    }}
+                />
             </IonContent>
         </IonPage>
     );

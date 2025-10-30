@@ -56,18 +56,22 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
         marital_status: '',
         religion: '',
         living_with: '',
-        partner_occupation: '',
         family_income: '',
         current_year_level: '',
         highest_educational_attainment: '',
+        fathers_occupation: '',
+        mothers_occupation: '',
    });
 
-   const [educationData, setEducationData] = useState<any>({
-    elementary: '',
-    juniorHigh: '',
-    seniorHigh: '',
-    college: '',
-  });
+   const [partnersData, setPartnersData] = useState<any>({
+    pFirstname: '',
+    pLastname: '',
+    pAge: 0,
+    pBirthdate: '',
+    pOccupation: '',
+    pIncome: '',
+   });
+
 
   const [healthData, setHealthData] = useState<any>({
     pregnancy_status: '',
@@ -89,9 +93,31 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
       }
       
       // Generate IDs for the different tables
-      const profileId = Math.floor(Math.random() * 1000000);
-      const educationId = Math.floor(Math.random() * 1000000);
-      const healthid = parseInt(user.id, 10) || Math.floor(Math.random() * 1000000);
+      const currentYear = new Date().getFullYear();
+      const yearPrefix = parseInt( currentYear.toString());
+
+      const {data: latestProfile, error: fetchError} = await supabase
+        .from('profile')
+        .select('profileid')
+        .gte('profileid', yearPrefix * 10000)
+        .lt('profileid',(yearPrefix + 1) * 10000)
+        .order('profileid', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      let profileId: number;
+      if (latestProfile && latestProfile.profileid) {
+        profileId = latestProfile.profileid + 1;
+      } else {
+        profileId = yearPrefix * 10000 + 1;
+      }
+
+      const partnerid = profileId;
+      const healthid = profileId;
       
       // Prepare data for Supabase
       // Debug the current profileData
@@ -113,20 +139,24 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
         marital_status: profileData.marital_status || '',
         religion: profileData.religion || '',
         living_with: profileData.living_with || '',
-        partner_occupation: profileData.partner_occupation || '',
         family_income: profileData.family_income || '',
         current_year_level: profileData.current_year_level || '',
-        highest_educational_attainment: profileData.highest_educational_attainment || ''
+        highest_educational_attainment: profileData.highest_educational_attainment || '',
+        fathers_occupation: profileData.fathers_occupation || '',
+        mothers_occupation: profileData.mothers_occupation || '',
+      };
+
+      const partnersPayload = {
+        partnerid: partnerid,
+        profileid: profileId,
+        pFirstname: partnersData.pFirstname || '',
+        pLastname: partnersData.pLastname || '',
+        pAge: partnersData.pAge || 0,
+        pBirthdate: partnersData.pBirthdate || '',
+        pOccupation: partnersData.pOccupation || '',
+        pIncome: partnersData.pIncome || '',
       };
       
-      const educationPayload = {
-        educationid: educationId,
-        profileid: profileId,
-        elementary: educationData.elementary || '',
-        juniorHigh: educationData.juniorHigh || '',
-        seniorHigh: educationData.seniorHigh || '',
-        college: educationData.college || '',
-      };
       
       const healthPayload = {
         health_id: healthid,
@@ -140,15 +170,15 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
       // Save the profile using the service function
       const result = await saveCompleteProfile(
         profilePayload,
-        educationPayload,
-        healthPayload
+        healthPayload,
+        partnersPayload
       );
       
       if (result.success) {
         // Call onSave prop with the complete data
         await onSave({
           ...profilePayload,
-          education: educationPayload,
+          partner: partnersPayload,
           health: healthPayload
         });
         
@@ -171,13 +201,17 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
           family_income: '',
           current_year_level: '',
           highest_educational_attainment: '',
+          fathers_occupation: '',
+          mothers_occupation: '',
         });
-        
-        setEducationData({
-          elementary: '',
-          juniorHigh: '',
-          seniorHigh: '',
-          college: '',
+
+        setPartnersData({
+          pFirstname: '',
+          pLastname: '',
+          pAge: 0,
+          pBirthdate: '',
+          pOccupation: '',
+          pIncome: '',
         });
         
         setHealthData({
@@ -216,18 +250,19 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
     // Profile data fields
     if (["firstName", "lastName", "age", "birthdate", "contactnum", "barangay", "municipality",
           "province","region", "zipcode", "marital_status", "religion", "living_with","partner_occupation",
-          "family_income","current_year_level","highest_educational_attainment",].includes(field)) {
+          "family_income","current_year_level","highest_educational_attainment","fathers_occupation",
+          "mothers_occupation"].includes(field)) {
       setProfileData((prevData: any) => ({
         ...prevData,
         [fieldNameMapping[field] || field]: field === "age" ? Number(value) : value
       }));
     }
-    
-    // Education data fields
-    else if (["elementary", "juniorHigh", "seniorHigh", "college"].includes(field)) {
-      setEducationData((prevData: any) => ({
+
+    // Partner data fields
+    else if (["pFirstname", "pLastname", "pAge", "pBirthdate", "pOccupation", "pIncome"].includes(field)) {
+      setPartnersData((prevData: any) => ({
         ...prevData,
-        [field]: value
+        [fieldNameMapping[field] || field]: field === "pAge" ? Number(value) : value
       }));
     }
     
@@ -238,7 +273,7 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
         pregnancy_status: value
       }));
     }
-    else if (field === "current_stage") {
+    else if (field === "stage_of_pregnancy") {
       setHealthData((prevData: any) => ({
         ...prevData,
         stage_of_pregnancy: value
@@ -248,9 +283,10 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
     else if (field.startsWith("medical_")) {
       const condition = field.replace("medical_", "");
       setHealthData((prevData: any) => {
+       const currentHistory = prevData.medical_history || [];
         const updatedMedicalHistory = value 
-          ? [...prevData.medical_history, condition] 
-          : prevData.medical_history.filter((item: string) => item !== condition);
+          ? [...currentHistory, condition] 
+          : currentHistory.filter((item: string) => item !== condition);
         
         return {
           ...prevData,
@@ -261,13 +297,14 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
     else if (field.startsWith("support_")) {
       const support = field.replace("support_", "");
       setHealthData((prevData: any) => {
+        const currentSupport = prevData.types_of_support || [];
         const updatedSupportNeeds = value 
-          ? [...prevData.support_needs, support] 
-          : prevData.support_needs.filter((item: string) => item !== support);
+          ? [...currentSupport, support] 
+          : currentSupport.filter((item: string) => item !== support);
         
         return {
           ...prevData,
-          support_needs: updatedSupportNeeds
+          types_of_support: updatedSupportNeeds
         };
       });
     }
@@ -317,6 +354,17 @@ const handleBarangayChange = (barangayCode: string) => {
   handleChange("barangay", selectedBarangay?.name || barangayCode);
 };
 
+const Occupations = [
+    "Managers", "Professionals", "Technicians and Associate Professionals", "Clerical Support Workers", "Service Workers",
+    "Skilled Agricultural, Forestry and Fishery Workers", "Craft and Related Trades Workers", "Plant and Machine Operators and Assemblers",
+    "Elementary Occupations", "Armed Forces Occupations", "Not Working"
+];
+
+const Income = [
+    "None", "Less than ₱10,000", "₱10,000 - ₱29,588", "₱29,589 - ₱39,999", "₱40,000 - ₱59,999",
+    "₱60,000 - ₱99,999", "₱100,000 - ₱249,999", "₱250,000 - ₱499,999", "₱500,000 and Over"
+];
+
     return (
         <IonModal isOpen={isOpen} onDidDismiss={onClose} style={{'--width':'100%','--height':'100%',}} >
             <IonHeader>
@@ -353,9 +401,9 @@ const handleBarangayChange = (barangayCode: string) => {
             </IonHeader>
 
             <IonContent className="ion-padding" style={{ "--background": "#fff" }}>
-        <IonCard style={{ borderRadius: "15px", boxShadow: "0 0 10px #ccc", "--background": "#fff" }}>
-          <IonCardContent>
-            <h2 style={{ color: "black", fontWeight: "bold", backgroundColor: '#fff', padding: '10px', fontSize: '2rem' }}>Registration</h2>
+          <IonCard style={{ borderRadius: "15px", boxShadow: "0 0 10px #ccc", "--background": "#fff" }}>
+            <IonCardContent>
+              <h2 style={{ color: "black", fontWeight: "bold", backgroundColor: '#fff', padding: '10px', fontSize: '2rem' }}>Registration</h2>
 
             {/* BASIC INFORMATION */}
             <IonItemGroup>
@@ -366,7 +414,7 @@ const handleBarangayChange = (barangayCode: string) => {
                   "--background": "#fff",
                 }}
               >
-                Basic Information
+                Teenage Basic Information
               </IonItemDivider>
 
               <IonRow>
@@ -507,42 +555,56 @@ const handleBarangayChange = (barangayCode: string) => {
                         style={{ "--color": "#000" }}
                         onIonChange={(e) => handleChange("living_with", e.detail.value!)}
                     >
-                      <IonSelectOption value="Both Parents">Both Parents</IonSelectOption>
-                      <IonSelectOption value="Mother">Mother</IonSelectOption>
-                      <IonSelectOption value="Father">Father</IonSelectOption>
-                      <IonSelectOption value="Relatives">Relatives</IonSelectOption>
+                      <IonSelectOption value="Living with Both Parents">Both Parents</IonSelectOption>
+                      <IonSelectOption value="Living with Mother">Mother</IonSelectOption>
+                      <IonSelectOption value="Living with Father">Father</IonSelectOption>
+                      <IonSelectOption value="Living with Relatives">Relatives</IonSelectOption>
+                      <IonSelectOption value="Living with Partners">Partner</IonSelectOption>
                       <IonSelectOption value="Not living with Parents">Not living with Parents</IonSelectOption>
                     </IonSelect>
                   </IonItem>
                 </IonCol>    
               </IonRow>
-                  
+              
               <IonRow>
-                {/*Partner Occupation */}
+              {/*Fathers Occupation*/}
               <IonCol>
                 <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
                   <IonSelect
                           className='ion-margin'
-                          label="Partner Occupation"
+                          label="Fathers Occupation"
                           fill="outline"
                           labelPlacement="floating"
                           style={{ "--color": "#000" }}
-                          onIonChange={(e) => handleChange("partner_occupation", e.detail.value!)}
+                          onIonChange={(e) => handleChange("fathers_occupation", e.detail.value!)}
                       >
-                        <IonSelectOption value="Managers">Managers</IonSelectOption>
-                        <IonSelectOption value="Professionals">Professionals</IonSelectOption>
-                        <IonSelectOption value="Technicians and Associate Professionals ">Technicians and Associate Professionals </IonSelectOption>
-                        <IonSelectOption value="Clerical Support Workers">Clerical Support Workers</IonSelectOption>
-                        <IonSelectOption value="Skilled Agricultural, Forestry and Fishery Workers">Skilled Agricultural, Forestry and Fishery Workers</IonSelectOption>
-                        <IonSelectOption value="Craft and Related Trades Workers">Craft and Related Trades Workers</IonSelectOption>
-                        <IonSelectOption value="Plant and Machine Operators and Assemblers">Plant and Machine Operators and Assemblers</IonSelectOption>
-                        <IonSelectOption value="Elementary Occupations">Elementary Occupations</IonSelectOption>
-                        <IonSelectOption value="Armed Forces Occupations">Armed Forces Occupations</IonSelectOption>
-                        <IonSelectOption value="Not Working">Not Working</IonSelectOption>
+                        {Occupations.map((occupation, index) => (
+                          <IonSelectOption key={index} value={occupation}>{occupation}</IonSelectOption>
+                        ))}
                       </IonSelect>
                 </IonItem>
               </IonCol>
 
+              {/*Mothers Occupation*/}
+              <IonCol>
+                <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
+                  <IonSelect
+                          className='ion-margin'
+                          label="Mothers Occupation"
+                          fill="outline"
+                          labelPlacement="floating"
+                          style={{ "--color": "#000" }}
+                          onIonChange={(e) => handleChange("mothers_occupation", e.detail.value!)}
+                      >
+                        {Occupations.map((occupation, index) => (
+                          <IonSelectOption key={index} value={occupation}>{occupation}</IonSelectOption>
+                        ))}
+                      </IonSelect>
+                </IonItem>
+              </IonCol>
+              </IonRow>
+
+              <IonRow>
               {/*Family Income*/}
               <IonCol>
                 <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
@@ -554,17 +616,126 @@ const handleBarangayChange = (barangayCode: string) => {
                           style={{ "--color": "#000" }}
                           onIonChange={(e) => handleChange("family_income", e.detail.value!)}
                       >
-                        <IonSelectOption value="Less than ₱10,000">Less than ₱10,000</IonSelectOption>
-                        <IonSelectOption value="₱10,000 - ₱29,588">₱10,000 - ₱29,588</IonSelectOption>
-                        <IonSelectOption value="₱29,589 - ₱39,999">₱29,589 - ₱39,999</IonSelectOption>
-                        <IonSelectOption value="₱40,000 - ₱59,999">₱40,000 - ₱59,999</IonSelectOption>
-                        <IonSelectOption value="₱60,000 - ₱99,999">₱60,000 - ₱99,999</IonSelectOption>
-                        <IonSelectOption value="₱100,000 - ₱249,999">₱100,000 - ₱249,999</IonSelectOption>
-                        <IonSelectOption value="₱250,000 - ₱499,999">₱250,000 - ₱499,999</IonSelectOption>
-                        <IonSelectOption value="₱500,000 and Over">₱500,000 and Over</IonSelectOption>
+                        {Income.map((incomeRange, index) => (
+                          <IonSelectOption key={index} value={incomeRange}>{incomeRange}</IonSelectOption>
+                        ))}
                       </IonSelect>
                 </IonItem>
               </IonCol>
+              </IonRow>
+            </IonItemGroup>
+
+            {/*PARTNER INFORMATION */}
+            <IonItemGroup>
+              <IonItemDivider
+                style={{
+                  "--color": "#000",
+                  fontWeight: "bold",
+                  "--background": "#fff",
+                }}
+              >
+                Partner`s Information
+              </IonItemDivider>
+
+              <IonRow>
+                {/* Partner's First Name */}
+                <IonCol>
+                  <IonItem lines="none" style={{ "--background": "#fff", }}>
+                    <IonInput
+                      className='ion-margin'
+                      type="text" 
+                      label="Partner's First Name"
+                      labelPlacement="floating"
+                      fill='outline'
+                      style={{ "--color": "#000" }}
+                      onIonChange={(e) => handleChange("pFirstname", e.detail.value!)}
+                    />
+                  </IonItem>
+                </IonCol>
+                {/* Partner's Last Name */}
+                <IonCol>
+                  <IonItem lines="none" style={{ "--background": "#fff", }}>
+                    <IonInput
+                      className='ion-margin'
+                      type="text" 
+                      label="Partner's First Name"
+                      labelPlacement="floating"
+                      fill='outline'
+                      style={{ "--color": "#000" }}
+                      onIonChange={(e) => handleChange("pLastname", e.detail.value!)}
+                    />
+                  </IonItem>
+                </IonCol>
+              </IonRow>
+
+              <IonRow>
+                {/* Partner's Age */}
+                <IonCol>
+                  <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
+                    <IonInput
+                      className='ion-margin'
+                      type="number" 
+                      label="Partner's Age"
+                      fill='outline'
+                      labelPlacement="floating"
+                      style={{ "--color": "#000" }}
+                      onIonChange={(e) => handleChange("pAge", e.detail.value!)}
+                    />
+                  </IonItem>
+                </IonCol>
+                {/* Date of Birth */}
+                <IonCol>
+                  <IonItem lines="none" style={{ "--background": "#fff" }}>
+                    <IonInput
+                        className='ion-margin'
+                        label="Date of Birth"
+                        type="date"
+                        labelPlacement="floating"
+                        fill="outline"
+                        style={{ "--color": "#000" }}
+                        onIonChange={(e) =>
+                            handleChange("pBirthdate", e.detail.value!)
+                        }
+                    />
+                  </IonItem>
+                </IonCol>
+              </IonRow>
+
+              <IonRow>
+              {/*Partner Occupation */}
+              <IonCol>
+                <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
+                  <IonSelect
+                          className='ion-margin'
+                          label="Partner Occupation"
+                          fill="outline"
+                          labelPlacement="floating"
+                          style={{ "--color": "#000" }}
+                          onIonChange={(e) => handleChange("pOccupation", e.detail.value!)}
+                      >
+                        {Occupations.map((occupation, index) => (
+                          <IonSelectOption key={index} value={occupation}>{occupation}</IonSelectOption>
+                        ))}
+                      </IonSelect>
+                </IonItem>
+              </IonCol>
+              {/*Partner Income*/}
+              <IonCol>
+                <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
+                  <IonSelect
+                          className='ion-margin'
+                          label="Partner Income"
+                          fill="outline"
+                          labelPlacement="floating"
+                          style={{ "--color": "#000" }}
+                          onIonChange={(e) => handleChange("pIncome", e.detail.value!)}
+                      >
+                        {Income.map((incomeRange, index) => (
+                          <IonSelectOption key={index} value={incomeRange}>{incomeRange}</IonSelectOption>
+                        ))}
+                      </IonSelect>
+                </IonItem>
+              </IonCol>             
               </IonRow>
             </IonItemGroup>
 
@@ -681,6 +852,7 @@ const handleBarangayChange = (barangayCode: string) => {
                 </IonItemDivider>
 
                 <IonRow>
+                    {/* Type Of School Attended */}
                     <IonCol>
                         <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
                           <IonSelect
@@ -696,6 +868,8 @@ const handleBarangayChange = (barangayCode: string) => {
                           </IonSelect>
                         </IonItem>
                     </IonCol>
+
+                    {/* Current Year Level Of Education */}
                     <IonCol>
                         <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
                         <IonSelect
@@ -725,10 +899,13 @@ const handleBarangayChange = (barangayCode: string) => {
                             <IonSelectOption value="Vocational Training">Vocational Training</IonSelectOption>
                             <IonSelectOption value="ALS Elementary">ALS Elementary</IonSelectOption>
                             <IonSelectOption value="ALS Secondary">ALS Secondary</IonSelectOption>
+                            <IonSelectOption value="Not Attending School">Not Attending School</IonSelectOption>
                           </IonSelect>
                         </IonItem>
                     </IonCol>
                 </IonRow>
+
+                {/* Highest Educational Attainment */}
                 <IonRow>
                   <IonCol>
                      <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
@@ -788,8 +965,8 @@ const handleBarangayChange = (barangayCode: string) => {
                         style={{"--color": "#000" }}
                         onIonChange={(e) => handleChange("pregnancy_status", e.detail.value!)}
                     >
-                      <IonSelectOption value="pregnant">Pregnant</IonSelectOption>
-                      <IonSelectOption value="not_pregnant">Not Pregnant</IonSelectOption>
+                      <IonSelectOption value="Pregnant">Pregnant</IonSelectOption>
+                      <IonSelectOption value="Not Pregnant">Not Pregnant</IonSelectOption>
                     </IonSelect>
                   </IonItem>
                 </IonCol>
@@ -803,9 +980,9 @@ const handleBarangayChange = (barangayCode: string) => {
                         style={{"--color": "#000" }}
                         onIonChange={(e) => handleChange("stage_of_pregnancy", e.detail.value!)}
                     >
-                      <IonSelectOption value="First Trimester">First Trimester</IonSelectOption>
-                      <IonSelectOption value="Second Trimester">Second Trimester</IonSelectOption>
-                      <IonSelectOption value="Third Trimester">Third Trimester</IonSelectOption>
+                      <IonSelectOption value="1st Trimester">1st Trimester</IonSelectOption>
+                      <IonSelectOption value="2nd Trimester">2nd Trimester</IonSelectOption>
+                      <IonSelectOption value="3rd Trimester">3rd Trimester</IonSelectOption>
                     </IonSelect>
                   </IonItem>
                 </IonCol>
@@ -815,7 +992,19 @@ const handleBarangayChange = (barangayCode: string) => {
                 <IonLabel style={{ color: "#000" }}>Medical History</IonLabel>
               </IonItem>
               <IonRow>
-                {["Anemia", "Depression", "Hypertension", "Others"].map((cond) => (
+                {[
+                  "Tuberculosis (14 days or more of cough)",
+                  "Heart Diseases",
+                  "Diabetes",
+                  "Hypertension",
+                  "Bronchial Asthma",
+                  "Urinary Tract Infection",
+                  "Parasitism",
+                  "Goiter",
+                  "Anemia",
+                  "Malnutrition",
+                  "Genital Tract Infection"
+                ].map((cond) => (
                   <IonCol size="6" key={cond}>
                     <IonItem lines="none" style={{ "--background": "#fff", '--background-hover':'transparent', }}>
                       <IonCheckbox 
@@ -823,7 +1012,8 @@ const handleBarangayChange = (barangayCode: string) => {
                          style={{ '--checkbox-background': '#ffffffff',
                                   '--checkbox-background-checked': '#ffffffff',
                                   '--border-color': '#000000ff',
-                                  '--checkbox-icon-color': '#ffffff'
+                                  '--checkbox-icon-color': '#ffffff',
+                                  '--checkmark-color':'#000000'
                                 }}
                         onIonChange={(e) => handleChange(`medical_${cond}`, e.detail.checked)}
                       >
@@ -832,6 +1022,22 @@ const handleBarangayChange = (barangayCode: string) => {
                     </IonItem>
                   </IonCol>
                 ))}
+              </IonRow>
+
+               {/* Others input field */}
+              <IonRow>
+                <IonCol>
+                  <IonItem lines="none" style={{ "--background": "#fff" }}>
+                    <IonLabel position ="stacked" style={{ color: "#000", fontSize: "1.1rem", marginLeft: "5px" }}>Others Please specify</IonLabel>
+                    <IonInput
+                      className='ion-margin'
+                      style={{ "--color": "#000" }}
+                      value={healthData.medical_history}
+                      onIonChange={(e) => handleChange("medical_history", e.detail.value || healthData.medical_history)}
+                      placeholder="Specify other medical conditions"
+                    />
+                  </IonItem>
+                </IonCol>
               </IonRow>
             </IonItemGroup>
 
@@ -857,7 +1063,8 @@ const handleBarangayChange = (barangayCode: string) => {
                           style={{ '--checkbox-background': '#ffffffff',
                                   '--checkbox-background-checked': '#ffffffff',
                                   '--border-color': '#000000ff',
-                                  '--checkbox-icon-color': '#ffffff'
+                                  '--checkbox-icon-color': '#ffffff',
+                                  '--checkmark-color':'#000000',
                                 }}
                           onIonChange={(e) => handleChange(`support_${support}`, e.detail.checked)}
                         >

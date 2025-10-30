@@ -8,6 +8,14 @@ interface ProfileData {
   birthdate: string;
   age: number;
   contactnum: string;
+  marital_status: string;
+  living_with: string;
+  family_income: string;
+  current_year_level: string;
+  highest_educational_attainment: string;
+  religion: string;
+  fathers_occupation: string;
+  mothers_occupation: string;
 
   // Address info
   barangay: string;
@@ -16,13 +24,15 @@ interface ProfileData {
   zipcode: string;
 }
 
-interface EducationData {
-  educationid: number;
+interface PartnersData {
+  partnerid: number;
   profileid: number;
-  elementary: string;
-  juniorHigh: string;
-  seniorHigh: string;
-  college: string;
+  pFirstname: string;
+  pLastname: string;
+  pAge: number;
+  pBirthdate: string;
+  pOccupation: string;
+  pIncome: string;
 }
 
 interface MaternalHealthData {
@@ -30,14 +40,14 @@ interface MaternalHealthData {
     profileid: number;
     pregnancy_status: string;
     medical_history: string;
-    support_type: string;
-    current_stage?: string; 
+    types_of_support: string;
+    stage_of_pregnancy?: string; 
 }
 
 export async function saveCompleteProfile(
   profileData: ProfileData,
-  educationData: EducationData,
-  maternalHealthData: MaternalHealthData
+  maternalHealthData: MaternalHealthData,
+  partnersPayload: PartnersData
 ) {
   try {
     
@@ -51,20 +61,6 @@ export async function saveCompleteProfile(
 
     const profileid = profileResult[0].profileid;
 
-    //Insert into EducationAndTraining table
-    const { data: educationResult, error: educationError } = await supabase
-      .from('EducationAndTraining')
-      .insert([{...educationData,profileid}]);
-
-    if (educationError) {
-      // Rollback profile insertion
-      await supabase
-        .from('profile')
-        .delete()
-        .match({ profileid: profileid });
-      throw educationError;
-    }
-
     //Insert into maternalhealthRecord table
     const { data: healthResult, error: healthError } = await supabase
       .from('maternalhealthRecord')
@@ -77,12 +73,25 @@ export async function saveCompleteProfile(
         .delete()
         .match({ profileid: profileid });
       await supabase
-        .from('EducationAndTraining')
+        .from('profile')
         .delete()
-        .match({ educationid: educationData.educationid });
+        .match({ profileid: profileid });
       throw healthError;
     }
 
+    //Insert into partners table
+    const {data: partnersResult, error: partnersError} = await supabase
+      .from('partnersInfo')
+      .insert([{...partnersPayload, profileid}]);
+
+      if (partnersError) {
+        // Rollback previous insertions
+        await supabase
+          .from('maternalhealthRecord')
+          .delete()
+          .match({ health_id: maternalHealthData.health_id });
+          throw partnersError;
+      }
     return { success: true, message: "Profile information successfully saved" };
   } catch (error: any) {
     console.error("Error saving profile:", error);

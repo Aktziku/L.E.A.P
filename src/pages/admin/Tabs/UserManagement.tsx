@@ -162,18 +162,7 @@ const UserManagement: React.FC = () => {
                                                 >
                                                     Edit
                                                 </IonButton>
-                                                <IonButton
-                                                    size="small"
-                                                        fill="outline"
-                                                        color="black"
-                                                        style={{
-                                                            
-                                                            color: "#000",
-                                                            marginRight: "5px",
-                                                        }}
-                                                    >
-                                                        Delete
-                                                    </IonButton>
+                                                
                                                 </IonCol>
                                         </IonRow>
 

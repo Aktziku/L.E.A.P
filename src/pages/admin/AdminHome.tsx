@@ -42,6 +42,7 @@ const AdminHome: React.FC = () => {
     const [importing, setImporting] = useState(false);
     
     const [userDetails, setUserDetails] = useState<{role:string} | null>(null);
+    
 
     // array for sidebar items
     const roleTabs: Record<string,Array<{name:string;url:string;icon:string}>> = {
@@ -174,8 +175,9 @@ const AdminHome: React.FC = () => {
                                     marginTop: 'auto',
                                     marginBottom: 'auto',
                                     marginLeft: 'clamp(8px, 2vw, 16px)',
-                                    fontSize: 'clamp(20px, 2vw, 30px)',
+                                    fontSize: 'clamp(15px, 2vw, 20px)',
                                     color: '#F3E8FF',
+                                    
                                 }}
                             >
                                 {getCurrentTitle()}
@@ -192,15 +194,17 @@ const AdminHome: React.FC = () => {
                             <IonSearchbar
                                 className='ion-margin-end'
                                 placeholder="Search"
+                                showClearButton="never"
                                 style={{
-                                    width: 'clamp(150px, 30vw, 400px)',
+                                    width: '100%',
+                                    maxWidth: '400px', 
                                     '--background': '#ffffffff',
                                     '--border-radius': '20px',
                                     '--placeholder-color': '#002d54',
                                     '--placeholder-opacity': '1',
                                     '--icon-color': '#000000ff',
-                                    fontSize: 'clamp(12px, 1.5vw, 16px)',
-                                    color: '#fdfaffff',
+                                    fontSize: 'clamp(12px, 1vw, 15px)',
+                                    color: '#000000ff',
                                 }}
                             >
 
@@ -240,52 +244,54 @@ const AdminHome: React.FC = () => {
                                     marginTop: '10px'
                                 }}
                             >
-                                {tabsToRender.map((item, index) => (
-                                    <IonItem
-                                        key={index}
-                                        routerLink={item.url}
-                                        lines='none'
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            color: 'white',
-                                            '--background': 'transparent',
-                                            '--color': 'white',
-                                            '--border-style': 'none',
-                                            '--border-width': '0',
-                                            '--inner-border-width': '0',
-                                            '--highlight-height': '0',
-                                            borderRadius: '12px',
-                                            margin: '8px 0px',
-                                        }}
-                                    >
-                                        <div>
-                                            <IonIcon
-                                                icon={item.icon}
-                                                style={{
-                                                    fontSize: '24px',
-                                                    marginRight: isHovered ? '15px' : '0px',
-                                                    color: 'white',
-                                                    transition: 'margin 0.3s ease-in-out',
-                                                }}
-                                            />
-                                        </div>
+                                {tabsToRender.map((item, index) => {
+                                    const isActive = location.pathname === item.url;
 
-                                        {isHovered && (
-                                            <IonLabel
+                                    return (
+                                            <IonItem
+                                                key={index}
+                                                routerLink={item.url}
+                                                lines='none'
                                                 style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
                                                     color: 'white',
-                                                    transition: 'width 0.3s ease-in-out, opacity 0.3s ease-in-out',
-                                                    opacity: isHovered ? 1 : 0,
-                                                    whiteSpace: 'nowrap',
-                                                    overFlow: 'hidden',
+                                                    '--background': isActive ? '#0d6efd' : 'transparent', 
+                                                    '--color': isActive ? '#ffffff' : 'white',                              
+                                                    margin: '8px 0px',
+                                                    transition: '0.3s ease-in-out',
+                                                    fontWeight: isActive ? 'bold' : 'normal', 
+                                                    boxShadow: isActive ? '0px 0px 8px rgba(255,255,255,0.3)' : 'none' 
                                                 }}
                                             >
-                                                {item.name}
-                                            </IonLabel>
-                                        )}
-                                    </IonItem>
-                                ))}
+                                                <div>
+                                                <IonIcon
+                                                    icon={item.icon}
+                                                    style={{
+                                                        fontSize: '24px',
+                                                        marginRight: isHovered ? '15px' : '0px',
+                                                        color: isActive ? '#ffffff' : 'white',
+                                                        transition: 'margin 0.3s ease-in-out, color 0.3s ease-in-out',
+                                                    }}
+                                                />
+                                                </div>
+                                                {isHovered && (
+                                                    <IonLabel
+                                                        style={{
+                                                            color: isActive ? '#ffffff' : 'white',
+                                                            opacity: isHovered ? 1 : 0,
+                                                            whiteSpace: 'nowrap',
+                                                            transition: 'color 0.3s ease-in-out',
+                                                            fontWeight: isActive ? 'bold' : 'normal'
+                                                        }}
+                                                    >
+                                                        {item.name}
+                                                    </IonLabel>
+                                                )}
+                                            </IonItem>
+                                        );
+                                    })}
+
 
 
 

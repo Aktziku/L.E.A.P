@@ -24,10 +24,7 @@ interface formState {
     institutionOrCenter: string;
     enroll_dropout_Date: string;
     gradeLevel: string;
-    elementary: string;
-    juniorHigh: string;
-    seniorHigh: string;
-    college: string;
+
 }
 
 const emptyForm: formState = {
@@ -39,16 +36,13 @@ const emptyForm: formState = {
     institutionOrCenter: '',
     enroll_dropout_Date: '',
     gradeLevel: '',
-    elementary: '',
-    juniorHigh: '',
-    seniorHigh: '',
-    college: '',
+
 };
 
 const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose, onSave, }) => {
     const [profiles, setProfiles] = useState<ProfileOption[]>([]);
     const [loading, setLoading] = useState(false);
-    const [save,setSave] = useState(false);
+    const [save, setSave] = useState(false);
     const [prefillLoading, setPrefillLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [form, setForm] = useState<formState>(emptyForm);
@@ -57,10 +51,10 @@ const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose,
     const [filteredProfiles, setFilteredProfiles] = useState<ProfileOption[]>([]);
 
     const gradeLevelOptions: Record<string, string[]> = {
-        elementary: ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'],
+        'elementary': ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'],
         'junior high': ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'],
         'senior high': ['Grade 11', 'Grade 12'],
-        college: ['1st Year', '2nd Year', '3rd Year', '4th Year',],
+        'college': ['1st Year', '2nd Year', '3rd Year', '4th Year',],
     };
 
     const getGradeLevelOptions = () => {
@@ -126,6 +120,8 @@ const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose,
             } else {
                 setError('An unexpected error occurred');
             }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -139,36 +135,6 @@ const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose,
             profileSearch: `${profile.lastName ?? ''}, ${profile.firstName ?? ''} (ID: ${profile.profileid})`,
         }));
         setShowSuggestions(false);
-
-        setPrefillLoading(true);
-        const {data, error} = await supabase
-            .from('EducationAndTraining')
-            .select('elementary, juniorHigh, seniorHigh, college')
-            .eq('profileid', profile.profileid)
-            .order('educationid', {ascending: false})
-            .limit(1)
-            .maybeSingle();
-
-            if (error) {
-                setError(error.message);
-            } else if (data) {
-                setForm((prevForm) => ({
-                    ...prevForm,
-                    elementary: data.elementary ?? '',
-                    juniorHigh: data.juniorHigh ?? '',
-                    seniorHigh: data.seniorHigh ?? '',
-                    college: data.college ?? '',
-                }));
-            } else {
-                setForm((prevForm) => ({
-                    ...prevForm,
-                    elementary: '',
-                    juniorHigh: '',
-                    seniorHigh: '',
-                    college: '',
-                }));
-            }
-            setPrefillLoading(false);
             
     };
 
@@ -215,10 +181,7 @@ const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose,
             institutionOrCenter: form.institutionOrCenter || null,
             enroll_dropout_Date: form.enroll_dropout_Date || null,
             gradeLevel: form.gradeLevel || null,
-            elementary: form.elementary || null,
-            juniorHigh: form.juniorHigh || null,
-            seniorHigh: form.seniorHigh || null,
-            college: form.college || null,
+
         };
 
         const {error} = await supabase
@@ -351,7 +314,7 @@ const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose,
                                         onIonChange={(e) => handleChange("typeOfProgram", e.detail.value)}
                                         disabled={save}
                                     >
-                                        <IonSelectOption value="Elementary School">Elementary School</IonSelectOption>
+                                        <IonSelectOption value="Elementary">Elementary School</IonSelectOption>
                                         <IonSelectOption value="Junior High">Junior High</IonSelectOption>
                                         <IonSelectOption value="Senior High">Senior High</IonSelectOption>
                                         <IonSelectOption value="College">College</IonSelectOption>
@@ -410,7 +373,7 @@ const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose,
 
                                 {/* Other Fields */}
                                 {[
-                                { label: "Institution / Training Center", key: "institutionOrCenter", type: "text" as const },
+                                { label: "Name of Institution / Training Center", key: "institutionOrCenter", type: "text" as const },
                                 { label: "Date Enrolled / Dropout", key: "enroll_dropout_Date", type: "date" as const },
                                 ].map((item) => (
                                 <IonItem key={item.key} style={{ "--background": "#fff", "--color": "#000000" }}>
@@ -428,7 +391,7 @@ const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose,
 
                             {showEmptyProfilesMessage && (
                                 <IonText color="medium" style={{ display: 'block', marginTop: '1rem' }}>
-                                No profiles found. Create a profile first.
+                                No profiles found. Choose a profile first.
                                 </IonText>
                             )}
 

@@ -179,7 +179,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSave }) 
                                             disabled: {loading}
                                         }}
                                     >
-                                        {loading ? 'Saving...' : 'Save'}
+                                        {loading ? 'Save' : 'Saving...'}
                                     </IonButton>
                                     </IonCol>
                                     <IonCol size="auto">
