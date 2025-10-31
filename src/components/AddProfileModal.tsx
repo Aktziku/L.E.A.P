@@ -121,11 +121,10 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
       
       // Prepare data for Supabase
       // Debug the current profileData
-      console.log("Current profileData:", profileData);
+      //console.log("Current profileData:", profileData);
       
       const profilePayload = {
         profileid: profileId,
-        // Use lowercase column names for Supabase
         firstName: profileData.firstName || profileData.firstname || '',
         lastName: profileData.lastName || profileData.lastname || '',
         age: profileData.age || 0,
@@ -980,9 +979,10 @@ const Income = [
                         style={{"--color": "#000" }}
                         onIonChange={(e) => handleChange("stage_of_pregnancy", e.detail.value!)}
                     >
-                      <IonSelectOption value="1st Trimester">1st Trimester</IonSelectOption>
-                      <IonSelectOption value="2nd Trimester">2nd Trimester</IonSelectOption>
-                      <IonSelectOption value="3rd Trimester">3rd Trimester</IonSelectOption>
+                        <IonSelectOption value="First Trimester (1-12 weeks)">First Trimester (1-12 weeks)</IonSelectOption>
+                        <IonSelectOption value="Second Trimester (13-26 weeks)">Second Trimester (13-26 weeks)</IonSelectOption>
+                        <IonSelectOption value="Third Trimester (27-40 weeks)">Third Trimester (27-40 weeks)</IonSelectOption>
+                        <IonSelectOption value="N/A">N/A</IonSelectOption>
                     </IonSelect>
                   </IonItem>
                 </IonCol>

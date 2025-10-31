@@ -1,14 +1,14 @@
 {
-  "short_name": "LEAP",
+  "short_name": "TPMSS",
   "name": "My Ionic App",
   "icons": [
     {
-      "src": "public/assets/logo.png",
+      "src": "assets/logo.png",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
     {
-      "src": "public/assets/logo.png",
+      "src": "assets/logo.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"

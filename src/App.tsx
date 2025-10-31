@@ -42,8 +42,8 @@ setupIonicReact();
 
 const App: React.FC = () => (
   <IonApp>
-    <IonReactRouter >
-      <IonRouterOutlet>
+    <IonReactRouter basename="/L.E.A.P/">
+      <IonRouterOutlet >
         <Route exact path="/" component={Login} />
         <Route exact path="/register" component={Register} />
         <Route exact path="/auth/callback" component={AuthCallBack} />

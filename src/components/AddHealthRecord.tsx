@@ -1,4 +1,4 @@
-import { IonButton, IonCard, IonCardContent, IonContent, IonHeader, IonInput, IonItem, IonLabel, IonList, IonModal, IonPage, IonSpinner, IonText, IonTitle, IonToolbar } from '@ionic/react';
+import { IonButton, IonCard, IonCardContent, IonCheckbox, IonContent, IonHeader, IonInput, IonItem, IonLabel, IonList, IonModal, IonPage, IonSelect, IonSelectOption, IonSpinner, IonText, IonTitle, IonToolbar } from '@ionic/react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../utils/supabaseClients';
 
@@ -20,7 +20,7 @@ interface formState {
     pregnancy_status: string;
     stage_of_pregnancy: string;
     medical_history: string[];
-    medical_history_others: string;
+
     types_of_support: string[];
     num_of_pregnancies: number;
     tentanus_vacc: boolean;
@@ -37,7 +37,6 @@ const emptyForm: formState = {
     pregnancy_status: '',
     stage_of_pregnancy: '',
     medical_history: [],
-    medical_history_others: '',
     types_of_support: [],
     num_of_pregnancies: 0,
     tentanus_vacc: false,
@@ -118,14 +117,72 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
     const handleProfileSelect = async (profile: ProfileOption) => {
         
         setError(null);
-
-        setForm((prevForm) => ({
-            ...prevForm,
-            profileid: profile.profileid,
-            profileSearch: `${profile.lastName ?? ''}, ${profile.firstName ?? ''} (ID: ${profile.profileid})`,
-        }));
         setShowSuggestions(false);
-            
+        setFilteredProfiles([]);
+        setPrefillLoading(true);
+
+        try {
+        const {data,error} = await supabase
+            .from('maternalhealthRecord')
+            .select('*')
+            .eq('profileid', profile.profileid)
+
+            //console.log('=== QUERY RESULT ===');
+            //console.log('All matching records:', data);
+            //console.log('Error:', error);
+           // console.log('Number of records found:', data?.length);
+
+            if (error) {
+                console.error('Database error:', error);
+                setError(error.message);
+                setPrefillLoading(false);
+                return;
+            } 
+            if (data && data.length > 0) {
+
+                 const latestRecord = data.reduce((prev, current) => 
+                (current.health_id > prev.health_id) ? current : prev
+            );
+               // console.log('Latest record:', latestRecord);
+                const medicalHistoryArray = latestRecord.medical_history 
+                ? latestRecord.medical_history.split(',').map((item: string) => item.trim()) 
+                : [];
+            const typesOfSupportArray = latestRecord.types_of_support 
+                ? latestRecord.types_of_support.split(',').map((item: string) => item.trim()) 
+                : [];
+
+                setForm({
+                profileid: profile.profileid,
+                profileSearch: `${profile.lastName ?? ''}, ${profile.firstName ?? ''} (ID: ${profile.profileid})`,
+                pregnancy_status: latestRecord.pregnancy_status || '',
+                stage_of_pregnancy: latestRecord.stage_of_pregnancy || '',
+                medical_history: medicalHistoryArray,
+                types_of_support: typesOfSupportArray,
+                num_of_pregnancies: latestRecord.num_of_pregnancies || 0,
+                tentanus_vacc: latestRecord.tentanus_vacc || false,
+                tetanus_dose: latestRecord.tetanus_dose || 0,
+                date_of_last_mens_period: latestRecord.date_of_last_mens_period || '',
+                height: latestRecord.height || 0,
+                weight: latestRecord.weight || 0,
+                temperature: latestRecord.temperature || 0,
+            });
+                //console.log(' Form updated with data!');
+
+            } else {
+                //console.log('No existing health record found for this profile');
+                setForm ({
+                    ...emptyForm,
+                    profileid: profile.profileid,
+                    profileSearch: `${profile.lastName ?? ''}, ${profile.firstName ?? ''} (ID: ${profile.profileid})`,
+                });
+            }
+        } catch (error) {
+            //console.error('Error fetching health record:', error);
+            setError('An unexpected error occurred while fetching health record.');
+        } finally {
+
+            setPrefillLoading(false);
+        }
     };
 
     const handleChange = <K extends keyof formState>(key: K, value: formState[K]) => {
@@ -161,7 +218,6 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
 
         const medicalHistoryString = [
             ...form.medical_history,
-            ...(form.medical_history_others ? [`Others: ${form.medical_history_others}`] : [])
         ].join(',');
 
         const payload ={
@@ -181,7 +237,7 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
         };
         
         const { error } = await supabase
-            .from('maternalHealthRecord')
+            .from('maternalhealthRecord')
             .insert([payload]);
 
             if (error) {
@@ -318,6 +374,174 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
                                         ))}
                                     </div>
                                 )}
+
+                                {/* Pregnancy Status */}
+                                <IonItem>
+                                    <IonLabel position="stacked" style={{ '--color': '#000000' }}>
+                                        Pregnancy Status
+                                    </IonLabel>
+                                    <IonSelect
+                                        value={form.pregnancy_status}
+                                        onIonChange={(e) => handleChange('pregnancy_status', e.detail.value)}
+                                        style={{ '--color': '#000000' }}
+                                        disabled={save || prefillLoading}
+                                    >
+                                        <IonSelectOption value="Pregnant">Pregnant</IonSelectOption>
+                                        <IonSelectOption value="Not Pregnant">Not Pregnant</IonSelectOption>
+                                    </IonSelect>
+                                </IonItem>
+
+                                {/* Stage of Pregnancy */}
+                                <IonItem style={{ "--background": "#fff", "--color": "#000000" }}>
+                                    <IonLabel position="stacked" style={{ '--color': '#000000' }}>
+                                        Stage of Pregnancy
+                                    </IonLabel>
+                                    <IonSelect
+                                        value={form.stage_of_pregnancy}
+                                        onIonChange={(e) => handleChange('stage_of_pregnancy', e.detail.value)}
+                                        style={{ '--color': '#000000' }}
+                                        disabled={save || prefillLoading}
+                                    >
+                                        <IonSelectOption value="First Trimester (1-12 weeks)">First Trimester (1-12 weeks)</IonSelectOption>
+                                        <IonSelectOption value="Second Trimester (13-26 weeks)">Second Trimester (13-26 weeks)</IonSelectOption>
+                                        <IonSelectOption value="Third Trimester (27-40 weeks)">Third Trimester (27-40 weeks)</IonSelectOption>
+                                        <IonSelectOption value="N/A">N/A</IonSelectOption>
+                                    </IonSelect>
+                                </IonItem>
+
+                                {/* Number of Pregnancies */}
+                                <IonItem style={{ "--background": "#fff", "--color": "#000000" }}>
+                                    <IonLabel position="stacked" style={{ '--color': '#000000' }}>
+                                        Number of Pregnancies
+                                    </IonLabel>
+                                    <IonInput
+                                        type="number"
+                                        value={form.num_of_pregnancies}
+                                        onIonInput={(e) => handleChange('num_of_pregnancies', parseInt(e.detail.value ?? '0'))}
+                                        style={{ '--color': '#000000' }}
+                                        disabled={save || prefillLoading}
+                                    />
+                                </IonItem>
+
+                                {/* Date of Last Menstrual Period */}
+                                <IonItem style={{ "--background": "#fff", "--color": "#000000" }}>
+                                    <IonLabel position="stacked" style={{ '--color': '#000000' }}>
+                                        Date of Last Menstrual Period
+                                    </IonLabel>
+                                    <IonInput
+                                        type="date"
+                                        value={form.date_of_last_mens_period}
+                                        onIonInput={(e) => handleChange('date_of_last_mens_period', e.detail.value ?? '')}
+                                        style={{ '--color': '#000000' }}
+                                        disabled={save || prefillLoading}
+                                    />
+                                </IonItem>
+
+                                {/* Medical History */}
+                                <IonItem style={{ "--background": "#fff", "--color": "#000000" }}>
+                                    <IonLabel style={{ '--color': '#000000', fontWeight: 'bold', marginTop: '1rem' }}>
+                                        Medical History
+                                    </IonLabel>
+                                </IonItem>
+
+                                {medicalConditions.map((condition) => (
+                                    <IonItem key={condition} style={{ "--background": "#fff", "--color": "#000000" }}>
+                                        <IonCheckbox
+                                            checked={form.medical_history.includes(condition)}
+                                            onIonChange={(e) => handleCheckbox('medical_history', condition, e.detail.checked)}
+                                            disabled={save || prefillLoading}
+                                            style={{ marginRight: '10px' }}
+                                        >
+                                            {condition}
+                                        </IonCheckbox>
+                                    </IonItem>
+                                ))}
+
+
+                                {/* Tetanus Vaccination */}
+                                <IonItem style={{ "--background": "#fff", "--color": "#000000" }}>
+                                    <IonCheckbox
+                                        checked={form.tentanus_vacc}
+                                        onIonChange={(e) => handleChange('tentanus_vacc', e.detail.checked)}
+                                        disabled={save || prefillLoading}
+                                        style={{ marginRight: '10px' }}
+                                    >
+                                        Tetanus Vaccination Received
+                                    </IonCheckbox>
+                                </IonItem>
+
+                                 {/* Tetanus Dose */}
+                                <IonItem style={{ "--background": "#fff", "--color": "#000000" }}>
+                                    <IonLabel position="stacked" style={{ '--color': '#000000' }}>
+                                        Tetanus Dose
+                                    </IonLabel>
+                                    <IonInput
+                                        type="number"
+                                        value={form.tetanus_dose}
+                                        onIonInput={(e) => handleChange('tetanus_dose', parseInt(e.detail.value ?? '0'))}
+                                        style={{ '--color': '#000000' }}
+                                        disabled={save || prefillLoading}
+                                    />
+                                </IonItem>
+
+                                {/* Height */}
+                                <IonItem style={{ "--background": "#fff", "--color": "#000000" }}>
+                                    <IonLabel position="stacked" style={{ '--color': '#000000' }}>
+                                        Height (cm)
+                                    </IonLabel>
+                                    <IonInput
+                                        type="number"
+                                        value={form.height}
+                                        onIonInput={(e) => handleChange('height', parseFloat(e.detail.value ?? '0'))}
+                                        style={{ '--color': '#000000' }}
+                                        disabled={save || prefillLoading}
+                                    />
+                                </IonItem>
+
+                                {/* Weight */}
+                                <IonItem style={{ "--background": "#fff", "--color": "#000000" }}>
+                                    <IonLabel position="stacked" style={{ '--color': '#000000' }}>
+                                        Weight (kg)
+                                    </IonLabel>
+                                    <IonInput
+                                        type="number"
+                                        value={form.weight}
+                                        onIonInput={(e) => handleChange('weight', parseFloat(e.detail.value ?? '0'))}
+                                        style={{ '--color': '#000000' }}
+                                        disabled={save || prefillLoading}
+                                    />
+                                </IonItem>
+
+                                {/* Temperature */}
+                                <IonItem style={{ "--background": "#fff", "--color": "#000000" }}>
+                                    <IonLabel position="stacked" style={{ '--color': '#000000' }}>
+                                        Temperature (°C)
+                                    </IonLabel>
+                                    <IonInput
+                                        type="number"
+                                        value={form.temperature}
+                                        onIonInput={(e) => handleChange('temperature', parseFloat(e.detail.value ?? '0'))}
+                                        style={{ '--color': '#000000' }}
+                                        disabled={save || prefillLoading}
+                                    />
+                                </IonItem>
+
+                                {/* Save Button */}
+                                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
+                                    <IonButton
+                                        onClick={handleSave}
+                                        disabled={save || prefillLoading}
+                                        style={{
+                                            '--background': '#002d54',
+                                            '--color': '#fff',
+                                            fontWeight: 'bold',
+                                            borderRadius: '8px',
+                                            width: '200px',
+                                        }}
+                                    >
+                                        {save ? <IonSpinner name="dots" /> : 'Save Health Record'}
+                                    </IonButton>
+                                </div>
 
                             </IonList>
                         </IonCardContent>
