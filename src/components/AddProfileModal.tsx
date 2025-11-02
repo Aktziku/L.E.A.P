@@ -20,7 +20,9 @@ import {
     IonGrid,
     IonItemGroup,
     IonItemDivider,
-    IonCheckbox
+    IonCheckbox,
+    IonRadio,
+    IonRadioGroup
 } from '@ionic/react';
 import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../utils/supabaseClients';
@@ -41,6 +43,7 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
    const [isEditing, setIsEditing] = useState(false);
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState<string | null>(null);
+   const [isIndigenous, setIsIndigenous] = useState<string>(''); 
 
    const [profileData, setProfileData] = useState<any>({
         firstName: '',  
@@ -61,6 +64,7 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
         highest_educational_attainment: '',
         fathers_occupation: '',
         mothers_occupation: '',
+        indigenous_ethnicity: '',
    });
 
    const [partnersData, setPartnersData] = useState<any>({
@@ -77,7 +81,8 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
     pregnancy_status: '',
     medical_history: [],
     types_of_support: [],
-    stage_of_pregnancy: ''
+    stage_of_pregnancy: '',
+    medical_history_others: '',
   });
 
   // Function to save profile data to Supabase
@@ -121,7 +126,7 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
       
       // Prepare data for Supabase
       // Debug the current profileData
-      //console.log("Current profileData:", profileData);
+      console.log("Current profileData:", profileData);
       
       const profilePayload = {
         profileid: profileId,
@@ -143,6 +148,7 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
         highest_educational_attainment: profileData.highest_educational_attainment || '',
         fathers_occupation: profileData.fathers_occupation || '',
         mothers_occupation: profileData.mothers_occupation || '',
+        indigenous_ethnicity: profileData.indigenous_ethnicity || '',
       };
 
       const partnersPayload = {
@@ -161,9 +167,12 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
         health_id: healthid,
         profileid: profileId,
         pregnancy_status: healthData.pregnancy_status || '',
-        medical_history: healthData.medical_history?.join(',') || '',
+        medical_history: [
+          ...healthData.medical_history,
+          ...(healthData.medical_history_others ? [` ${healthData.medical_history_others}`] : [])
+        ].join(',') || '',
         types_of_support: healthData.types_of_support?.join(',') || '',
-        stage_of_pregnancy: healthData.stage_of_pregnancy || ''
+        stage_of_pregnancy: healthData.stage_of_pregnancy || '',
       };
       
       // Save the profile using the service function
@@ -202,6 +211,7 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
           highest_educational_attainment: '',
           fathers_occupation: '',
           mothers_occupation: '',
+          indigenous_ethnicity: '',
         });
 
         setPartnersData({
@@ -218,6 +228,7 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
           pregnancy_status: '',
           medical_history: [],
           types_of_support: [],
+          medical_history_others: '',
 
         });
         
@@ -250,7 +261,7 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
     if (["firstName", "lastName", "age", "birthdate", "contactnum", "barangay", "municipality",
           "province","region", "zipcode", "marital_status", "religion", "living_with","partner_occupation",
           "family_income","current_year_level","highest_educational_attainment","fathers_occupation",
-          "mothers_occupation"].includes(field)) {
+          "mothers_occupation", "indigenous_ethnicity"].includes(field)) {
       setProfileData((prevData: any) => ({
         ...prevData,
         [fieldNameMapping[field] || field]: field === "age" ? Number(value) : value
@@ -276,6 +287,12 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
       setHealthData((prevData: any) => ({
         ...prevData,
         stage_of_pregnancy: value
+      }));
+    }
+    else if (field === "medical_history_others") {
+      setHealthData((prevData: any) => ({
+        ...prevData,
+        medical_history_others: value
       }));
     }
     // For checkboxes (medical history and support needs)
@@ -415,213 +432,283 @@ const Income = [
               >
                 Teenage Basic Information
               </IonItemDivider>
+                <IonGrid>
+                  <IonRow>
+                    {/* First Name */}
+                    <IonCol size='12' size-md='6'>
+                      <IonItem lines="none" style={{ "--background": "#fff" }}>
+                        <IonInput
+                            className='ion-margin'
+                            label="First Name"
+                            labelPlacement="floating"
+                            fill="outline"
+                            style={{ "--color": "#000" }}
+                            onIonChange={(e) =>
+                                handleChange("firstName", e.detail.value!)
+                            }
+                        />
+                      </IonItem>
+                    </IonCol>
+                    {/* Last Name */}
+                    <IonCol size='12' size-md='6'>
+                      <IonItem lines="none" style={{ "--background": "#fff" }}>
+                        <IonInput
+                            className='ion-margin'
+                            label="Last Name"
+                            labelPlacement="floating"
+                            fill="outline"
+                            style={{ "--color": "#000" }}
+                            onIonChange={(e) =>
+                                handleChange("lastName", e.detail.value!)
+                            }
+                        />
+                      </IonItem>
+                    </IonCol>
+                  </IonRow>
+                </IonGrid>
 
-              <IonRow>
-                {/* First Name */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff" }}>
-                    <IonInput
-                        className='ion-margin'
-                        label="First Name"
-                        labelPlacement="floating"
-                        fill="outline"
-                        style={{ "--color": "#000" }}
-                        onIonChange={(e) =>
-                            handleChange("firstName", e.detail.value!)
-                        }
-                    />
-                  </IonItem>
-                </IonCol>
-                {/* Last Name */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff" }}>
-                    <IonInput
-                        className='ion-margin'
-                        label="Last Name"
-                        labelPlacement="floating"
-                        fill="outline"
-                        style={{ "--color": "#000" }}
-                        onIonChange={(e) =>
-                            handleChange("lastName", e.detail.value!)
-                        }
-                    />
-                  </IonItem>
-                </IonCol>
-              </IonRow>
+                <IonGrid>
+                  <IonRow>
+                    {/* Age */}
+                    <IonCol size='12' size-md='6'>
+                      <IonItem lines="none" style={{ "--background": "#fff" }}>
+                        <IonInput
+                            className='ion-margin'
+                            label="Age"
+                            type="number"
+                            labelPlacement="floating"
+                            fill="outline"
+                            style={{ "--color": "#000" }}
+                            onIonChange={(e) => handleChange("age", e.detail.value!)}
+                        />
+                      </IonItem>
+                    </IonCol>
 
-              <IonRow>
-                {/* Age */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff" }}>
-                    <IonInput
-                        className='ion-margin'
-                        label="Age"
-                        type="number"
-                        labelPlacement="floating"
-                        fill="outline"
-                        style={{ "--color": "#000" }}
-                        onIonChange={(e) => handleChange("age", e.detail.value!)}
-                    />
-                  </IonItem>
-                </IonCol>
+                    {/* Date of Birth */}
+                    <IonCol size='12' size-md='6'>
+                      <IonItem lines="none" style={{ "--background": "#fff" }}>
+                        <IonInput
+                            className='ion-margin'
+                            label="Date of Birth"
+                            type="date"
+                            labelPlacement="floating"
+                            fill="outline"
+                            style={{ "--color": "#000" }}
+                            onIonChange={(e) =>
+                                handleChange("birthdate", e.detail.value!)
+                            }
+                        />
+                      </IonItem>
+                    </IonCol>
+                  </IonRow>
+                </IonGrid>
 
-                {/* Date of Birth */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff" }}>
-                    <IonInput
-                        className='ion-margin'
-                        label="Date of Birth"
-                        type="date"
-                        labelPlacement="floating"
-                        fill="outline"
-                        style={{ "--color": "#000" }}
-                        onIonChange={(e) =>
-                            handleChange("birthdate", e.detail.value!)
-                        }
-                    />
-                  </IonItem>
-                </IonCol>
-              </IonRow>
+                <IonGrid>
+                  <IonRow>
+                    {/* contact number */}
+                    <IonCol size='12' size-md='6'>
+                      <IonItem lines="none" style={{ "--background": "#fff" }}>
+                        <IonInput
+                            className='ion-margin'
+                            label="Contact Number"
+                            labelPlacement="floating"
+                            fill="outline"
+                            style={{ "--color": "#000" }}
+                            onIonChange={(e) =>
+                                handleChange("contactnum", e.detail.value!)
+                            }
+                        />
+                      </IonItem>
+                    </IonCol>
+                    {/* Marital Status */}
+                    <IonCol size='12' size-md='6'>
+                      <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
+                        <IonSelect
+                            className='ion-margin'
+                            label="Marital Status"
+                            fill="outline"
+                            labelPlacement="floating"
+                            style={{"--color": "#000" }}
+                            onIonChange={(e) => handleChange("marital_status", e.detail.value!)}
+                        >
+                          <IonSelectOption value="married">Married</IonSelectOption>
+                          <IonSelectOption value="single">Single</IonSelectOption>
+                          <IonSelectOption value="live-in">Common-law/Live-in</IonSelectOption>
+                          <IonSelectOption value="separated">Separated</IonSelectOption>
+                          <IonSelectOption value="widowed">Widowed</IonSelectOption>
+                          <IonSelectOption value="divorced">Divorced</IonSelectOption>
+                          <IonSelectOption value="annulled">Annulled</IonSelectOption>
+                        </IonSelect>
+                      </IonItem>
+                    </IonCol>
+                  </IonRow>
+                </IonGrid>
 
-              <IonRow>
-                {/* contact number */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff" }}>
-                    <IonInput
-                        className='ion-margin'
-                        label="Contact Number"
-                        labelPlacement="floating"
-                        fill="outline"
-                        style={{ "--color": "#000" }}
-                        onIonChange={(e) =>
-                            handleChange("contactnum", e.detail.value!)
-                        }
-                    />
-                  </IonItem>
-                </IonCol>
-                {/* Marital Status */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
-                    <IonSelect
-                        className='ion-margin'
-                        label="Marital Status"
-                        fill="outline"
-                        labelPlacement="floating"
-                        style={{"--color": "#000" }}
-                        onIonChange={(e) => handleChange("marital_status", e.detail.value!)}
-                    >
-                      <IonSelectOption value="married">Married</IonSelectOption>
-                      <IonSelectOption value="single">Single</IonSelectOption>
-                      <IonSelectOption value="live-in">Common-law/Live-in</IonSelectOption>
-                      <IonSelectOption value="separated">Separated</IonSelectOption>
-                      <IonSelectOption value="widowed">Widowed</IonSelectOption>
-                      <IonSelectOption value="divorced">Divorced</IonSelectOption>
-                      <IonSelectOption value="annulled">Annulled</IonSelectOption>
-                    </IonSelect>
-                  </IonItem>
-                </IonCol>
-              </IonRow>
+                <IonGrid>
+                  <IonRow>
+                    {/* Religion */}
+                    <IonCol size='12' size-md='6'>
+                      <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
+                        <IonSelect
+                            className='ion-margin'
+                            label="Religion"
+                            fill="outline"
+                            labelPlacement="floating"
+                            style={{ "--color": "#000" }}
+                            onIonChange={(e) => handleChange("religion", e.detail.value!)}
+                        >
+                          <IonSelectOption value="Catholic">Roman Catholic</IonSelectOption>
+                          <IonSelectOption value="Evangelicals">Evangelicals</IonSelectOption>
+                          <IonSelectOption value="Islam">Islam</IonSelectOption>
+                          <IonSelectOption value="Iglesia Ni Cristo">Iglesia ni Cristo</IonSelectOption>
+                          <IonSelectOption value="Others">Others Religious Affiliations</IonSelectOption>
+                        </IonSelect>
+                      </IonItem>
+                    </IonCol>
 
-              <IonRow>
-                {/* Religion */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
-                    <IonSelect
-                        className='ion-margin'
-                        label="Religion"
-                        fill="outline"
-                        labelPlacement="floating"
-                        style={{ "--color": "#000" }}
-                        onIonChange={(e) => handleChange("religion", e.detail.value!)}
-                    >
-                      <IonSelectOption value="Catholic">Roman Catholic</IonSelectOption>
-                      <IonSelectOption value="Evangelicals">Evangelicals</IonSelectOption>
-                      <IonSelectOption value="Islam">Islam</IonSelectOption>
-                      <IonSelectOption value="Iglesia Ni Cristo">Iglesia ni Cristo</IonSelectOption>
-                      <IonSelectOption value="Others">Others Religious Affiliations</IonSelectOption>
-                    </IonSelect>
-                  </IonItem>
-                </IonCol>
+                    {/* Live With */}
+                    <IonCol size='12' size-md='6'>
+                      <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
+                        <IonSelect
+                            className='ion-margin'
+                            label="Live With"
+                            fill="outline"
+                            labelPlacement="floating"
+                            style={{ "--color": "#000" }}
+                            onIonChange={(e) => handleChange("living_with", e.detail.value!)}
+                        >
+                          <IonSelectOption value="Living with Both Parents">Both Parents</IonSelectOption>
+                          <IonSelectOption value="Living with Mother">Mother</IonSelectOption>
+                          <IonSelectOption value="Living with Father">Father</IonSelectOption>
+                          <IonSelectOption value="Living with Relatives">Relatives</IonSelectOption>
+                          <IonSelectOption value="Living with Partners">Partner</IonSelectOption>
+                          <IonSelectOption value="Not living with Parents">Not living with Parents</IonSelectOption>
+                        </IonSelect>
+                      </IonItem>
+                    </IonCol>    
+                  </IonRow>
+                </IonGrid>
 
-                {/* Live With */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
-                    <IonSelect
-                        className='ion-margin'
-                        label="Live With"
-                        fill="outline"
-                        labelPlacement="floating"
-                        style={{ "--color": "#000" }}
-                        onIonChange={(e) => handleChange("living_with", e.detail.value!)}
-                    >
-                      <IonSelectOption value="Living with Both Parents">Both Parents</IonSelectOption>
-                      <IonSelectOption value="Living with Mother">Mother</IonSelectOption>
-                      <IonSelectOption value="Living with Father">Father</IonSelectOption>
-                      <IonSelectOption value="Living with Relatives">Relatives</IonSelectOption>
-                      <IonSelectOption value="Living with Partners">Partner</IonSelectOption>
-                      <IonSelectOption value="Not living with Parents">Not living with Parents</IonSelectOption>
-                    </IonSelect>
-                  </IonItem>
-                </IonCol>    
-              </IonRow>
-              
-              <IonRow>
-              {/*Fathers Occupation*/}
-              <IonCol>
-                <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
-                  <IonSelect
-                          className='ion-margin'
-                          label="Fathers Occupation"
-                          fill="outline"
-                          labelPlacement="floating"
-                          style={{ "--color": "#000" }}
-                          onIonChange={(e) => handleChange("fathers_occupation", e.detail.value!)}
-                      >
-                        {Occupations.map((occupation, index) => (
-                          <IonSelectOption key={index} value={occupation}>{occupation}</IonSelectOption>
-                        ))}
-                      </IonSelect>
-                </IonItem>
-              </IonCol>
+                <IonGrid>
+                  <IonRow>
+                  {/*Indigenous Ethnicity */}
+                         <IonLabel style={{ fontWeight: 'bold', color: '#000', }}>
+                          Member of Indigenous People?
+                        </IonLabel>
+                    <IonCol >
+                      <IonItem lines="none" style={{"--background": "#fff","--color": "#000","--background-hover": "transparent",}}>
 
-              {/*Mothers Occupation*/}
-              <IonCol>
-                <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
-                  <IonSelect
-                          className='ion-margin'
-                          label="Mothers Occupation"
-                          fill="outline"
-                          labelPlacement="floating"
-                          style={{ "--color": "#000" }}
-                          onIonChange={(e) => handleChange("mothers_occupation", e.detail.value!)}
-                      >
-                        {Occupations.map((occupation, index) => (
-                          <IonSelectOption key={index} value={occupation}>{occupation}</IonSelectOption>
-                        ))}
-                      </IonSelect>
-                </IonItem>
-              </IonCol>
-              </IonRow>
+                        <IonRadioGroup
+                          value={isIndigenous}
+                          onIonChange={(e) => {
+                            setIsIndigenous(e.detail.value);
+                            if (e.detail.value === "No") {
+                              handleChange("is_indigenous", "");
+                            }
+                          }}
+                          style={{
+                            display: "flex",
+                            gap: "1rem",
+                            marginTop: "0.5rem",
+                          }}
+                        >
+                          <IonCol size='12' size-md='6'>
+                            <IonItem lines="none" style={{ "--background": "transparent" }}>
+                              <IonLabel>Yes</IonLabel>
+                              <IonRadio slot="start" value="Yes" />
+                            </IonItem>
+                          </IonCol>
 
-              <IonRow>
-              {/*Family Income*/}
-              <IonCol>
-                <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
-                  <IonSelect
-                          className='ion-margin'
-                          label="Family Income"
-                          fill="outline"
-                          labelPlacement="floating"
-                          style={{ "--color": "#000" }}
-                          onIonChange={(e) => handleChange("family_income", e.detail.value!)}
-                      >
-                        {Income.map((incomeRange, index) => (
-                          <IonSelectOption key={index} value={incomeRange}>{incomeRange}</IonSelectOption>
-                        ))}
-                      </IonSelect>
-                </IonItem>
-              </IonCol>
-              </IonRow>
+                          <IonCol size='12' size-md='6'>
+                            <IonItem lines="none" style={{ "--background": "transparent" }}>
+                              <IonLabel>No</IonLabel>
+                              <IonRadio slot="start" value="No" />
+                            </IonItem>
+                          </IonCol>
+                        </IonRadioGroup>
+                      </IonItem>
+                    </IonCol>
+                    
+                    <IonCol size='12' size-md='6'>
+                        <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
+                          <IonInput
+                            className='ion-margin'
+                            label="Specify Indigenous People"
+                            type="text"
+                            labelPlacement="floating"
+                            fill="outline"
+                            style={{ "--color": "#000" }}
+                            onIonChange={(e) =>
+                              handleChange("indigenous_ethnicity", e.detail.value!)
+                            }
+                            disabled={isIndigenous !== 'Yes'}
+                          />
+                        </IonItem>
+                    </IonCol>
+                  </IonRow>
+                </IonGrid>
+
+                <IonGrid>
+                  <IonRow>
+                  {/*Fathers Occupation*/}
+                  <IonCol size='12' size-md='6'>
+                    <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
+                      <IonSelect
+                              className='ion-margin'
+                              label="Fathers Occupation"
+                              fill="outline"
+                              labelPlacement="floating"
+                              style={{ "--color": "#000" }}
+                              onIonChange={(e) => handleChange("fathers_occupation", e.detail.value!)}
+                          >
+                            {Occupations.map((occupation, index) => (
+                              <IonSelectOption key={index} value={occupation}>{occupation}</IonSelectOption>
+                            ))}
+                          </IonSelect>
+                    </IonItem>
+                  </IonCol>
+
+                  {/*Mothers Occupation*/}
+                  <IonCol size='12' size-md='6'>
+                    <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
+                      <IonSelect
+                              className='ion-margin'
+                              label="Mothers Occupation"
+                              fill="outline"
+                              labelPlacement="floating"
+                              style={{ "--color": "#000" }}
+                              onIonChange={(e) => handleChange("mothers_occupation", e.detail.value!)}
+                          >
+                            {Occupations.map((occupation, index) => (
+                              <IonSelectOption key={index} value={occupation}>{occupation}</IonSelectOption>
+                            ))}
+                          </IonSelect>
+                    </IonItem>
+                  </IonCol>
+                  </IonRow>
+                </IonGrid>
+
+                <IonGrid>
+                  <IonRow>
+                  {/*Family Income*/}
+                  <IonCol size='12' size-md='6'>
+                    <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
+                      <IonSelect
+                              className='ion-margin'
+                              label="Family Income"
+                              fill="outline"
+                              labelPlacement="floating"
+                              style={{ "--color": "#000" }}
+                              onIonChange={(e) => handleChange("family_income", e.detail.value!)}
+                          >
+                            {Income.map((incomeRange, index) => (
+                              <IonSelectOption key={index} value={incomeRange}>{incomeRange}</IonSelectOption>
+                            ))}
+                          </IonSelect>
+                    </IonItem>
+                  </IonCol>
+                  </IonRow>
+                </IonGrid>
             </IonItemGroup>
 
             {/*PARTNER INFORMATION */}
@@ -636,106 +723,112 @@ const Income = [
                 Partner`s Information
               </IonItemDivider>
 
-              <IonRow>
-                {/* Partner's First Name */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff", }}>
-                    <IonInput
-                      className='ion-margin'
-                      type="text" 
-                      label="Partner's First Name"
-                      labelPlacement="floating"
-                      fill='outline'
-                      style={{ "--color": "#000" }}
-                      onIonChange={(e) => handleChange("pFirstname", e.detail.value!)}
-                    />
-                  </IonItem>
-                </IonCol>
-                {/* Partner's Last Name */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff", }}>
-                    <IonInput
-                      className='ion-margin'
-                      type="text" 
-                      label="Partner's First Name"
-                      labelPlacement="floating"
-                      fill='outline'
-                      style={{ "--color": "#000" }}
-                      onIonChange={(e) => handleChange("pLastname", e.detail.value!)}
-                    />
-                  </IonItem>
-                </IonCol>
-              </IonRow>
-
-              <IonRow>
-                {/* Partner's Age */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
-                    <IonInput
-                      className='ion-margin'
-                      type="number" 
-                      label="Partner's Age"
-                      fill='outline'
-                      labelPlacement="floating"
-                      style={{ "--color": "#000" }}
-                      onIonChange={(e) => handleChange("pAge", e.detail.value!)}
-                    />
-                  </IonItem>
-                </IonCol>
-                {/* Date of Birth */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff" }}>
-                    <IonInput
+              <IonGrid>
+                <IonRow>
+                  {/* Partner's First Name */}
+                  <IonCol size='12' size-md='6'>
+                    <IonItem lines="none" style={{ "--background": "#fff", }}>
+                      <IonInput
                         className='ion-margin'
-                        label="Date of Birth"
-                        type="date"
+                        type="text" 
+                        label="Partner's First Name"
                         labelPlacement="floating"
-                        fill="outline"
+                        fill='outline'
                         style={{ "--color": "#000" }}
-                        onIonChange={(e) =>
-                            handleChange("pBirthdate", e.detail.value!)
-                        }
-                    />
+                        onIonChange={(e) => handleChange("pFirstname", e.detail.value!)}
+                      />
+                    </IonItem>
+                  </IonCol>
+                  {/* Partner's Last Name */}
+                  <IonCol size='12' size-md='6'>
+                    <IonItem lines="none" style={{ "--background": "#fff", }}>
+                      <IonInput
+                        className='ion-margin'
+                        type="text" 
+                        label="Partner's Last Name"
+                        labelPlacement="floating"
+                        fill='outline'
+                        style={{ "--color": "#000" }}
+                        onIonChange={(e) => handleChange("pLastname", e.detail.value!)}
+                      />
+                    </IonItem>
+                  </IonCol>
+                </IonRow>
+              </IonGrid>
+
+              <IonGrid>
+                <IonRow>
+                  {/* Partner's Age */}
+                  <IonCol size='12' size-md='6'>
+                    <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
+                      <IonInput
+                        className='ion-margin'
+                        type="number" 
+                        label="Partner's Age"
+                        fill='outline'
+                        labelPlacement="floating"
+                        style={{ "--color": "#000" }}
+                        onIonChange={(e) => handleChange("pAge", e.detail.value!)}
+                      />
+                    </IonItem>
+                  </IonCol>
+                  {/* Date of Birth */}
+                  <IonCol size='12' size-md='6'>
+                    <IonItem lines="none" style={{ "--background": "#fff" }}>
+                      <IonInput
+                          className='ion-margin'
+                          label="Date of Birth"
+                          type="date"
+                          labelPlacement="floating"
+                          fill="outline"
+                          style={{ "--color": "#000" }}
+                          onIonChange={(e) =>
+                              handleChange("pBirthdate", e.detail.value!)
+                          }
+                      />
+                    </IonItem>
+                  </IonCol>
+                </IonRow>
+              </IonGrid>
+
+              <IonGrid>
+                <IonRow>
+                {/*Partner Occupation */}
+                <IonCol size='12' size-md='6'>
+                  <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
+                    <IonSelect
+                            className='ion-margin'
+                            label="Partner Occupation"
+                            fill="outline"
+                            labelPlacement="floating"
+                            style={{ "--color": "#000" }}
+                            onIonChange={(e) => handleChange("pOccupation", e.detail.value!)}
+                        >
+                          {Occupations.map((occupation, index) => (
+                            <IonSelectOption key={index} value={occupation}>{occupation}</IonSelectOption>
+                          ))}
+                        </IonSelect>
                   </IonItem>
                 </IonCol>
-              </IonRow>
-
-              <IonRow>
-              {/*Partner Occupation */}
-              <IonCol>
-                <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
-                  <IonSelect
-                          className='ion-margin'
-                          label="Partner Occupation"
-                          fill="outline"
-                          labelPlacement="floating"
-                          style={{ "--color": "#000" }}
-                          onIonChange={(e) => handleChange("pOccupation", e.detail.value!)}
-                      >
-                        {Occupations.map((occupation, index) => (
-                          <IonSelectOption key={index} value={occupation}>{occupation}</IonSelectOption>
-                        ))}
-                      </IonSelect>
-                </IonItem>
-              </IonCol>
-              {/*Partner Income*/}
-              <IonCol>
-                <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
-                  <IonSelect
-                          className='ion-margin'
-                          label="Partner Income"
-                          fill="outline"
-                          labelPlacement="floating"
-                          style={{ "--color": "#000" }}
-                          onIonChange={(e) => handleChange("pIncome", e.detail.value!)}
-                      >
-                        {Income.map((incomeRange, index) => (
-                          <IonSelectOption key={index} value={incomeRange}>{incomeRange}</IonSelectOption>
-                        ))}
-                      </IonSelect>
-                </IonItem>
-              </IonCol>             
-              </IonRow>
+                {/*Partner Income*/}
+                <IonCol size='12' size-md='6'>
+                  <IonItem lines="none" style={{ "--background": "#fff","--color": "#000", '--background-hover':'transparent', }}>
+                    <IonSelect
+                            className='ion-margin'
+                            label="Partner Income"
+                            fill="outline"
+                            labelPlacement="floating"
+                            style={{ "--color": "#000" }}
+                            onIonChange={(e) => handleChange("pIncome", e.detail.value!)}
+                        >
+                          {Income.map((incomeRange, index) => (
+                            <IonSelectOption key={index} value={incomeRange}>{incomeRange}</IonSelectOption>
+                          ))}
+                        </IonSelect>
+                  </IonItem>
+                </IonCol>             
+                </IonRow>
+              </IonGrid>
             </IonItemGroup>
 
             {/* ADDRESS */}
@@ -750,92 +843,98 @@ const Income = [
                 Address
               </IonItemDivider>
 
-              <IonRow>
-                {/* REGION */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent',}}>
-                    <IonSelect 
-                        className='ion-margin'
-                        label="Region" 
-                        fill="outline" 
-                        labelPlacement="floating" 
-                        style={{ "--color": "#000", "--background-activated": "transparent" }}
-                       onIonChange={(e) => handleRegionChange(e.detail.value)}>
-                      {regionlist.map((r, index) => (
-                        <IonSelectOption key={`reg-${r.reg_code}-${index}`} value={r.reg_code}>{r.name}</IonSelectOption>
-                      ))}
-                    </IonSelect>
-                  </IonItem>
-                </IonCol>
-                {/* PROVINCE */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
-                    <IonSelect 
-                        className='ion-margin' 
-                        label="Province" fill="outline" 
-                        labelPlacement="floating" 
-                        style={{ "--color": "#000" }}  
-                        onIonChange={(e) => handleProvinceChange(e.detail.value)} disabled={provincelist.length === 0}>
-                        {provincelist.map((p, index) => (
-                          <IonSelectOption key={`prov-${p.prov_code}-${index}`} value={p.prov_code}>{p.name}</IonSelectOption>
-                        ))}
-                    </IonSelect>
-                  </IonItem>
-                </IonCol>
-              </IonRow>
-
-              <IonRow>
-                {/* MUNICIPALITY */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
-                    <IonSelect 
-                        className='ion-margin' 
-                        label="Municipality" fill="outline" 
-                        labelPlacement="floating" 
-                        style={{ "--color": "#000" }} 
-                        onIonChange={(e) => handleMunicipalityChange(e.detail.value)} disabled={municipalitylist.length === 0}>
-                        {municipalitylist.map((m, index) => (
-                          <IonSelectOption key={`mun-${m.mun_code}-${index}`} value={m.mun_code}>{m.name}</IonSelectOption>
+              <IonGrid>
+                <IonRow>
+                  {/* REGION */}
+                  <IonCol size='12' size-md='6'>
+                    <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent',}}>
+                      <IonSelect 
+                          className='ion-margin'
+                          label="Region" 
+                          fill="outline" 
+                          labelPlacement="floating" 
+                          style={{ "--color": "#000", "--background-activated": "transparent" }}
+                        onIonChange={(e) => handleRegionChange(e.detail.value)}>
+                        {regionlist.map((r, index) => (
+                          <IonSelectOption key={`reg-${r.reg_code}-${index}`} value={r.reg_code}>{r.name}</IonSelectOption>
                         ))}
                       </IonSelect>
-                  </IonItem>
-                </IonCol>
-
-                {/* BARANGAY */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent',}}>
-                     <IonSelect 
-                        className='ion-margin' 
-                        label="Barangay" 
-                        fill="outline" 
-                        labelPlacement="floating" 
-                        style={{ "--color": "#000" }}
-                        onIonChange={(e) => handleBarangayChange(e.detail.value)} disabled={barangaylist.length === 0}>
-                        {barangaylist.map((b, index) => (
-                          <IonSelectOption key={`${b.brgy_code}-${index}`} value={b.brgy_code}>{b.name}</IonSelectOption>
-                        ))}
+                    </IonItem>
+                  </IonCol>
+                  {/* PROVINCE */}
+                  <IonCol size='12' size-md='6'>
+                    <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
+                      <IonSelect 
+                          className='ion-margin' 
+                          label="Province" fill="outline" 
+                          labelPlacement="floating" 
+                          style={{ "--color": "#000" }}  
+                          onIonChange={(e) => handleProvinceChange(e.detail.value)} disabled={provincelist.length === 0}>
+                          {provincelist.map((p, index) => (
+                            <IonSelectOption key={`prov-${p.prov_code}-${index}`} value={p.prov_code}>{p.name}</IonSelectOption>
+                          ))}
                       </IonSelect>
-                  </IonItem>
-                </IonCol>
-              </IonRow>
+                    </IonItem>
+                  </IonCol>
+                </IonRow>
+              </IonGrid>
 
-              <IonRow>
-                {/* Zip Code */}
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff" }}>
-                    <IonInput
-                        className='ion-margin'
-                        label="Zip Code"
-                        labelPlacement="floating"
-                        fill="outline"
-                        style={{ "--color": "#000" }}
-                        onIonChange={(e) =>
-                            handleChange("zipcode", e.detail.value!)
-                        }
-                    />
-                  </IonItem>
-                </IonCol>
-              </IonRow>
+              <IonGrid>
+                <IonRow>
+                  {/* MUNICIPALITY */}
+                  <IonCol size='12' size-md='6'>
+                    <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
+                      <IonSelect 
+                          className='ion-margin' 
+                          label="Municipality" fill="outline" 
+                          labelPlacement="floating" 
+                          style={{ "--color": "#000" }} 
+                          onIonChange={(e) => handleMunicipalityChange(e.detail.value)} disabled={municipalitylist.length === 0}>
+                          {municipalitylist.map((m, index) => (
+                            <IonSelectOption key={`mun-${m.mun_code}-${index}`} value={m.mun_code}>{m.name}</IonSelectOption>
+                          ))}
+                        </IonSelect>
+                    </IonItem>
+                  </IonCol>
+
+                  {/* BARANGAY */}
+                  <IonCol size='12' size-md='6'>
+                    <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent',}}>
+                      <IonSelect 
+                          className='ion-margin' 
+                          label="Barangay" 
+                          fill="outline" 
+                          labelPlacement="floating" 
+                          style={{ "--color": "#000" }}
+                          onIonChange={(e) => handleBarangayChange(e.detail.value)} disabled={barangaylist.length === 0}>
+                          {barangaylist.map((b, index) => (
+                            <IonSelectOption key={`${b.brgy_code}-${index}`} value={b.brgy_code}>{b.name}</IonSelectOption>
+                          ))}
+                        </IonSelect>
+                    </IonItem>
+                  </IonCol>
+                </IonRow>
+              </IonGrid>
+
+              <IonGrid>
+                <IonRow>
+                  {/* Zip Code */}
+                  <IonCol size='12' size-md='6'>
+                    <IonItem lines="none" style={{ "--background": "#fff" }}>
+                      <IonInput
+                          className='ion-margin'
+                          label="Zip Code"
+                          labelPlacement="floating"
+                          fill="outline"
+                          style={{ "--color": "#000" }}
+                          onIonChange={(e) =>
+                              handleChange("zipcode", e.detail.value!)
+                          }
+                      />
+                    </IonItem>
+                  </IonCol>
+                </IonRow>
+              </IonGrid>
             </IonItemGroup>
 
             {/* Educational Background */}
@@ -852,7 +951,7 @@ const Income = [
 
                 <IonRow>
                     {/* Type Of School Attended */}
-                    <IonCol>
+                    <IonCol size='12' size-md='6'>
                         <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
                           <IonSelect
                               className='ion-margin'
@@ -869,7 +968,7 @@ const Income = [
                     </IonCol>
 
                     {/* Current Year Level Of Education */}
-                    <IonCol>
+                    <IonCol size='12' size-md='6'>
                         <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
                         <IonSelect
                               className='ion-margin'
@@ -952,78 +1051,83 @@ const Income = [
               >
                 Health Status
               </IonItemDivider>
+              
+              <IonGrid>
+                <IonRow>
+                  <IonCol size="12" size-md='6'>
+                    <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
+                      <IonSelect
+                          className='ion-margin'
+                          label="Pregnancy Status"
+                          fill="outline"
+                          labelPlacement="floating"
+                          style={{"--color": "#000" }}
+                          onIonChange={(e) => handleChange("pregnancy_status", e.detail.value!)}
+                      >
+                        <IonSelectOption value="Pregnant">Pregnant</IonSelectOption>
+                        <IonSelectOption value="Not Pregnant">Not Pregnant</IonSelectOption>
+                      </IonSelect>
+                    </IonItem>
+                  </IonCol>
 
-              <IonRow>
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
-                    <IonSelect
-                        className='ion-margin'
-                        label="Pregnancy Status"
-                        fill="outline"
-                        labelPlacement="floating"
-                        style={{"--color": "#000" }}
-                        onIonChange={(e) => handleChange("pregnancy_status", e.detail.value!)}
-                    >
-                      <IonSelectOption value="Pregnant">Pregnant</IonSelectOption>
-                      <IonSelectOption value="Not Pregnant">Not Pregnant</IonSelectOption>
-                    </IonSelect>
-                  </IonItem>
-                </IonCol>
-                <IonCol>
-                  <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
-                    <IonSelect
-                        className='ion-margin'
-                        label="Stage of Pregnancy"
-                        fill="outline"
-                        labelPlacement="floating"
-                        style={{"--color": "#000" }}
-                        onIonChange={(e) => handleChange("stage_of_pregnancy", e.detail.value!)}
-                    >
-                        <IonSelectOption value="First Trimester (1-12 weeks)">First Trimester (1-12 weeks)</IonSelectOption>
-                        <IonSelectOption value="Second Trimester (13-26 weeks)">Second Trimester (13-26 weeks)</IonSelectOption>
-                        <IonSelectOption value="Third Trimester (27-40 weeks)">Third Trimester (27-40 weeks)</IonSelectOption>
-                        <IonSelectOption value="N/A">N/A</IonSelectOption>
-                    </IonSelect>
-                  </IonItem>
-                </IonCol>
-              </IonRow>
+                  <IonCol size="12" size-md='6'>
+                    <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
+                      <IonSelect
+                          className='ion-margin'
+                          label="Stage of Pregnancy"
+                          fill="outline"
+                          labelPlacement="floating"
+                          style={{"--color": "#000" }}
+                          onIonChange={(e) => handleChange("stage_of_pregnancy", e.detail.value!)}
+                      >
+                          <IonSelectOption value="First Trimester (1-12 weeks)">First Trimester (1-12 weeks)</IonSelectOption>
+                          <IonSelectOption value="Second Trimester (13-26 weeks)">Second Trimester (13-26 weeks)</IonSelectOption>
+                          <IonSelectOption value="Third Trimester (27-40 weeks)">Third Trimester (27-40 weeks)</IonSelectOption>
+                          <IonSelectOption value="N/A">N/A</IonSelectOption>
+                      </IonSelect>
+                    </IonItem>
+                  </IonCol>
+                </IonRow>
+              </IonGrid>
 
               <IonItem lines="none" style={{ "--background": "#fff",fontWeight: "bold", fontSize: "0.9rem" }}>
                 <IonLabel style={{ color: "#000" }}>Medical History</IonLabel>
               </IonItem>
-              <IonRow>
-                {[
-                  "Tuberculosis (14 days or more of cough)",
-                  "Heart Diseases",
-                  "Diabetes",
-                  "Hypertension",
-                  "Bronchial Asthma",
-                  "Urinary Tract Infection",
-                  "Parasitism",
-                  "Goiter",
-                  "Anemia",
-                  "Malnutrition",
-                  "Genital Tract Infection"
-                ].map((cond) => (
-                  <IonCol size="6" key={cond}>
-                    <IonItem lines="none" style={{ "--background": "#fff", '--background-hover':'transparent', }}>
-                      <IonCheckbox 
-                        labelPlacement="end" 
-                         style={{ '--checkbox-background': '#ffffffff',
-                                  '--checkbox-background-checked': '#ffffffff',
-                                  '--border-color': '#000000ff',
-                                  '--checkbox-icon-color': '#ffffff',
-                                  '--checkmark-color':'#000000'
-                                }}
-                        onIonChange={(e) => handleChange(`medical_${cond}`, e.detail.checked)}
-                      >
-                        <IonLabel style={{ color: "#000" }}>{cond}</IonLabel>
-                      </IonCheckbox>
-                    </IonItem>
-                  </IonCol>
-                ))}
-              </IonRow>
 
+              <IonGrid>
+                <IonRow>
+                  {[
+                    "Tuberculosis (14 days or more of cough)",
+                    "Heart Diseases",
+                    "Diabetes",
+                    "Hypertension",
+                    "Bronchial Asthma",
+                    "Urinary Tract Infection",
+                    "Parasitism",
+                    "Goiter",
+                    "Anemia",
+                    "Malnutrition",
+                    "Genital Tract Infection"
+                  ].map((cond) => (
+                    <IonCol size="12" size-md='6' key={cond}>
+                      <IonItem lines="none" style={{ "--background": "#fff", '--background-hover':'transparent', }}>
+                        <IonCheckbox 
+                          labelPlacement="end" 
+                          style={{ '--checkbox-background': '#ffffffff',
+                                    '--checkbox-background-checked': '#ffffffff',
+                                    '--border-color': '#000000ff',
+                                    '--checkbox-icon-color': '#ffffff',
+                                    '--checkmark-color':'#000000'
+                                  }}
+                          onIonChange={(e) => handleChange(`medical_${cond}`, e.detail.checked)}
+                        >
+                          <IonLabel style={{ color: "#000" }}>{cond}</IonLabel>
+                        </IonCheckbox>
+                      </IonItem>
+                    </IonCol>
+                  ))}
+                </IonRow>
+              </IonGrid>
                {/* Others input field */}
               <IonRow>
                 <IonCol>
@@ -1032,8 +1136,8 @@ const Income = [
                     <IonInput
                       className='ion-margin'
                       style={{ "--color": "#000" }}
-                      value={healthData.medical_history}
-                      onIonChange={(e) => handleChange("medical_history", e.detail.value || healthData.medical_history)}
+                      value={healthData.medical_history_others}
+                      onIonChange={(e) => handleChange("medical_history_others", e.detail.value!)}
                       placeholder="Specify other medical conditions"
                     />
                   </IonItem>
@@ -1041,41 +1145,6 @@ const Income = [
               </IonRow>
             </IonItemGroup>
 
-            {/* SOCIAL SUPPORT NEEDS */}
-            <IonItemGroup>
-              <IonItemDivider
-                style={{
-                  "--color": "#000",
-                  fontWeight: "bold",
-                  "--background": "#fff",
-                }}
-              >
-                Social Support Needs
-              </IonItemDivider>
-
-              <IonRow>
-                {["Financial Aid", "Counseling", "Health Support", "Livelihood Training"].map(
-                  (support) => (
-                    <IonCol size="6" key={support}>
-                      <IonItem lines="none" style={{ "--background": "#fff",'--background-hover':'transparent',  }}>
-                        <IonCheckbox 
-                          labelPlacement="end"
-                          style={{ '--checkbox-background': '#ffffffff',
-                                  '--checkbox-background-checked': '#ffffffff',
-                                  '--border-color': '#000000ff',
-                                  '--checkbox-icon-color': '#ffffff',
-                                  '--checkmark-color':'#000000',
-                                }}
-                          onIonChange={(e) => handleChange(`support_${support}`, e.detail.checked)}
-                        >
-                          <IonLabel style={{ color: "#000" }}>{support}</IonLabel>
-                        </IonCheckbox>
-                      </IonItem>
-                    </IonCol>
-                  )
-                )}
-              </IonRow>
-            </IonItemGroup>
 
             <IonRow className="ion-justify-content-center ion-margin-top">
               <IonCol size="auto">

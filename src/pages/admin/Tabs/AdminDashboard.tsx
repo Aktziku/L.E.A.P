@@ -46,6 +46,7 @@ interface DashboardStats {
     totalTeenAgeParents: number;
     currentEnrolled: number;
     byProvince: { [key: string]: number };
+    byMunicipality: { [key: string]: number };
     byBarangay: { [key: string]: number };
 }
 
@@ -54,6 +55,7 @@ const AdminDashboard: React.FC = () => {
         totalTeenAgeParents: 0,
         currentEnrolled: 0,
         byProvince: {},
+        byMunicipality: {},
         byBarangay: {},
     });
     const [loading, setLoading] = useState(true);
@@ -77,14 +79,18 @@ const AdminDashboard: React.FC = () => {
 
             const {data: profile} = await supabase
                 .from('profile')
-                .select('province, barangay');
+                .select('province, municipality, barangay');
 
             const provinceCount: { [key: string]: number } = {};
+            const municipalityCount: { [key: string]: number } = {};
             const barangayCount: { [key: string]: number } = {};
 
             profile?.forEach((item: any) => {
                 if (item.province) {
                     provinceCount[item.province] = provinceCount[item.province] ? provinceCount[item.province] + 1 : 1;
+                }
+                if (item.municipality) {
+                    municipalityCount[item.municipality] = municipalityCount[item.municipality] ? municipalityCount[item.municipality] + 1 : 1;
                 }
                 if (item.barangay) {
                     barangayCount[item.barangay] = barangayCount[item.barangay] ? barangayCount[item.barangay] + 1 : 1;
@@ -95,6 +101,7 @@ const AdminDashboard: React.FC = () => {
                 totalTeenAgeParents: totalCount || 0,
                 currentEnrolled: enrolledCount || 0,
                 byProvince: provinceCount,
+                byMunicipality: municipalityCount,
                 byBarangay: barangayCount,
             });
 
@@ -111,6 +118,19 @@ const AdminDashboard: React.FC = () => {
             {
                 label: 'Number of Teenage Parents',
                 data: Object.values(stats?.byProvince || {}),
+                backgroundColor: '#002d54',
+                borderColor: '#001a33',
+                borderWidth: 1,
+            },
+        ],
+    };
+
+    const municipalityChartData = {
+        labels: Object.keys(stats?.byMunicipality || {}),
+        datasets: [
+            {
+                label: 'Number of Teenage Parents',
+                data: Object.values(stats?.byMunicipality || {}),
                 backgroundColor: '#002d54',
                 borderColor: '#001a33',
                 borderWidth: 1,
@@ -173,7 +193,7 @@ const AdminDashboard: React.FC = () => {
             <IonPage>
                 <IonContent style={{ '--background': '#ffffff' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                        <IonSpinner style={{ '--color': '#002d54' }} />
+                        <IonSpinner style={{ '--color': '#002d54', width: '50px', height: '50px' }} />
                     </div>
                 </IonContent>
             </IonPage>
@@ -210,7 +230,7 @@ const AdminDashboard: React.FC = () => {
                     <IonGrid>
                         <IonRow>
                             {/* Province Chart */}
-                            <IonCol size="12" sizeMd="6">
+                            <IonCol >
                                 <IonCard style={{ margin: '20px 0', padding: '20px', borderRadius: '15px' }}>
                                     <IonCardHeader>
                                         <IonCardTitle style={{ color: '#002d54' }}>
@@ -220,6 +240,28 @@ const AdminDashboard: React.FC = () => {
                                     <IonCardContent style={{ height: '400px', position: 'relative', width: '100%' }}>
                                         {stats && Object.keys(stats.byProvince).length > 0 ? (
                                             <Bar data={provinceChartData} options={chartOptions} />
+                                        ) : (
+                                            <div style={{ textAlign: 'center', padding: '50px', color: '#666' }}>
+                                                No data available
+                                            </div>
+                                        )}
+                                    </IonCardContent>
+                                </IonCard>
+                            </IonCol>
+                        </IonRow>
+
+                        <IonRow>
+                            {/* Municipality Chart */}
+                            <IonCol size="12" sizeMd="6">
+                                <IonCard style={{ margin: '20px 0', padding: '20px', borderRadius: '15px' }}>
+                                    <IonCardHeader>
+                                        <IonCardTitle style={{ color: '#002d54' }}>
+                                            Teenage Parents by Municipality
+                                        </IonCardTitle>
+                                    </IonCardHeader>
+                                    <IonCardContent style={{ height: '400px', position: 'relative', width: '100%' }}>
+                                        {stats && Object.keys(stats.byMunicipality).length > 0 ? (
+                                            <Bar data={municipalityChartData} options={chartOptions} />
                                         ) : (
                                             <div style={{ textAlign: 'center', padding: '50px', color: '#666' }}>
                                                 No data available

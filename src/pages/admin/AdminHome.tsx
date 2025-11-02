@@ -1,6 +1,7 @@
 import {
     IonApp,
     IonContent,
+    IonFooter,
     IonHeader,
     IonIcon,
     IonImg,
@@ -13,6 +14,8 @@ import {
     IonSearchbar,
 
     IonSplitPane,
+    IonTabBar,
+    IonTabButton,
     IonTitle,
     IonToolbar,
     useIonRouter
@@ -34,6 +37,7 @@ const AdminHome: React.FC = () => {
     const [isHovered, setIsHovered] = useState(false);
     const navigation = useIonRouter();
     const location = useLocation();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | undefined>();
@@ -154,7 +158,6 @@ const AdminHome: React.FC = () => {
                     <IonToolbar
                         style={{
                             '--background':'#002d54',
-                            '--border-width': '0',
                             '--min-height': '60px',
                             '--border-shadow': '0'
                         }}
@@ -163,19 +166,16 @@ const AdminHome: React.FC = () => {
                         <div style={{
                             display: 'flex',
                             alignItems: 'center'
-                        }}
+                            }}
                             slot='start'
                         >
-
-                            
 
                             <IonTitle
                                 className=''
                                 style={{
-                                    marginTop: 'auto',
-                                    marginBottom: 'auto',
-                                    marginLeft: 'clamp(8px, 2vw, 16px)',
-                                    fontSize: 'clamp(15px, 2vw, 20px)',
+
+                                    marginLeft: 'clamp(16px, 2vw, 22px)',
+                                    fontSize: 'clamp(12px, 2vw, 20px)',
                                     color: '#F3E8FF',
                                     
                                 }}
@@ -194,16 +194,14 @@ const AdminHome: React.FC = () => {
                             <IonSearchbar
                                 className='ion-margin-end'
                                 placeholder="Search"
-                                showClearButton="never"
                                 style={{
-                                    width: '100%',
-                                    maxWidth: '400px', 
+                                    width: 'clamp(200px, 40vw, 400px)',
                                     '--background': '#ffffffff',
                                     '--border-radius': '20px',
                                     '--placeholder-color': '#002d54',
                                     '--placeholder-opacity': '1',
                                     '--icon-color': '#000000ff',
-                                    fontSize: 'clamp(12px, 1vw, 15px)',
+                                    fontSize: 'clamp(10px, 1vw, 15px)',
                                     color: '#000000ff',
                                 }}
                             >
@@ -214,15 +212,7 @@ const AdminHome: React.FC = () => {
                 </IonHeader>
 
                 <IonContent>
-                    <IonSplitPane
-                        when="md"
-                        contentId="main"
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            height: '100%',
-                        }}
-                    >
+                    <IonSplitPane when="sm" contentId="main">
                         {/* Sidebar */}
                         <div
                             style={{
@@ -232,8 +222,6 @@ const AdminHome: React.FC = () => {
                                 height: '100%',
                                 display: 'flex',
                                 flexDirection: 'column',
-                                overflow: 'hidden',
-                                boxShadow: '2px 0 6px rgba(0,0,0,0.15)',
                             }}
                             onMouseEnter={() => setIsHovered(true)}
                             onMouseLeave={() => setIsHovered(false)}
@@ -257,11 +245,9 @@ const AdminHome: React.FC = () => {
                                                     alignItems: 'center',
                                                     color: 'white',
                                                     '--background': isActive ? '#0d6efd' : 'transparent', 
-                                                    '--color': isActive ? '#ffffff' : 'white',                              
+                                                    '--color': '#ffffff',                              
                                                     margin: '8px 0px',
-                                                    transition: '0.3s ease-in-out',
-                                                    fontWeight: isActive ? 'bold' : 'normal', 
-                                                    boxShadow: isActive ? '0px 0px 8px rgba(255,255,255,0.3)' : 'none' 
+                                                    transition: '0.3s ease-in-out', 
                                                 }}
                                             >
                                                 <div>
@@ -293,8 +279,6 @@ const AdminHome: React.FC = () => {
                                     })}
 
 
-
-
                                 {/* Logout Button */}
                                 <IonItem
                                     lines='none'
@@ -306,7 +290,7 @@ const AdminHome: React.FC = () => {
                                         color: '#fdedf4ff',
                                         '--background': 'transparent',
                                         '--color': 'white',
-
+                                        transition: '0.3s ease-in-out',
                                         margin: '8px 0px',
                                         background: 'rgba(14, 0, 15, 0.15)',
                                     }}
@@ -323,7 +307,6 @@ const AdminHome: React.FC = () => {
                                             style={{
                                                 fontSize: '24px',
                                                 color: 'white',
-                                                marginRight: isHovered ? '15px' : '0px',
                                                 transition: 'margin 0.3s ease-in-out',
                                             }}
                                         />
@@ -331,18 +314,20 @@ const AdminHome: React.FC = () => {
                                     </div>
 
                                     {isHovered && (
+                                        <div style={{ marginLeft: '8px' }}>
                                         <IonLabel
                                             style={{
                                                 color: '#fdedf4ff',
-                                                transition: 'width 0.3s ease-in-out, opacity 0.3s ease-in-out',
+                                                transition: 'color 0.3s ease-in-out',
                                                 opacity: isHovered ? 1 : 0,
                                                 whiteSpace: 'nowrap',
                                                 fontWeight: 'bold',
-                                                overFlow: 'hidden',
+                                              
                                             }}
                                         >
                                             LogOut
                                         </IonLabel>
+                                        </div>
                                     )}
 
                                 </IonItem>
@@ -355,7 +340,7 @@ const AdminHome: React.FC = () => {
                             style={{
                                 flex: 1,
                                 marginLeft: 0,
-                                padding: '20px',
+                                padding: 'clamp(10px, 2vw, 20px)',
                                 overflow: 'auto',
                                 background: '#fdf6f9'
                             }}

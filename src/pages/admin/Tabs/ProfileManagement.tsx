@@ -4,6 +4,7 @@ import { supabase } from '../../../utils/supabaseClients';
 import { addOutline, cloudUploadOutline, documentAttach, text } from 'ionicons/icons';
 import AddProfileModal from '../../../components/AddProfileModal';
 import { useIonViewWillEnter } from '@ionic/react';
+import ViewProfileModal from '../../../components/view/ViewProfileModal';
 
 
 interface Profile {
@@ -17,7 +18,7 @@ interface Profile {
     municipality: string;
     province: string;
     zipcode: string;
-    TimeCreated?: string;
+    createdAt: string;
   
 };
 const ProfileManagement: React.FC = () => {
@@ -30,6 +31,8 @@ const ProfileManagement: React.FC = () => {
     const [editingProfile, setEditingProfile] = useState < Profile | null > ();
     const [isEditing, setIsEditing] = useState(false);
     const [hasFetched, setHasFetched] = useState(false);
+    const [showViewModal, setShowViewModal] = useState(false);
+    const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
 
     // Reset loading state 
     useIonViewWillEnter(() => {
@@ -63,6 +66,11 @@ const ProfileManagement: React.FC = () => {
         finally {
             setLoading(false);
         }
+    };
+
+    const handleViewProfile = (profileId: number) => {
+        setSelectedProfileId(profileId);
+        setShowViewModal(true);
     };
 
    
@@ -117,99 +125,100 @@ const ProfileManagement: React.FC = () => {
         <IonPage>
             <IonContent style={{ '--background': '#ffffffff' }}>
 
-                <div className="ion-padding">
-                    <div className="ion-margin-bottom ion-margin-top">
+                <IonGrid className="ion-padding">
+                        <IonRow className="ion-margin-bottom ion-margin-top">
+                            <IonCol size="12" size-md="6" size-lg="4">
+                                {/*Button for adding profiles */}
+                                <IonButton
+                                    className="ion-margin-end"
+                                    onClick={() => {
+                                        setShowAddModal(true);
+                                        setIsEditing(false);
+                                        setEditingProfile(null);
+                                    }}
+                                    style={{
+                                        '--background': '#002d54',
+                                        color: 'white',
+                                        borderRadius: '12px',
+                                    }}
+                                >
+                                    <IonIcon icon={addOutline} slot="start" />
+                                    Register Profile
+                                </IonButton>
+                            </IonCol>
+                        </IonRow>
 
-                            {/*Button for adding profiles */}
-                        <IonButton
-                            className="ion-margin-end"
-                            onClick={() => {
-                                setShowAddModal(true);
-                                setIsEditing(false);
-                                setEditingProfile(null);
-                            }}
-                            style={{
-                                '--background': '#002d54',
-                                color: 'white',
-                                borderRadius: '12px',
-                            }}
-                        >
-                            <IonIcon icon={addOutline} slot="start" />
-                            Register Profile
-                        </IonButton>
-                    </div>
-
-                    {error && (
-                        <div className="ion-margin-bottom ion-color-danger">
-                            <IonText color="danger">{error}</IonText>
-                        </div>
-                    )}
-
-                    <IonGrid>
-                        <IonCard style={{ border: "1px solid #000",'--background':'#ffffffff' }}>
-                            <IonCardContent>
-                                <IonGrid>
-                                    {/* Table Header */}
-                                    <IonRow
-                                        style={{
-                                        borderBottom: "1px solid #000",
-                                        fontWeight: "bold",
-                                        color: "#000",
-                                        }}
-                                    >
-                                        <IonCol>Name</IonCol>
-                                        <IonCol>Date Registered</IonCol>
-                                        <IonCol size="3">Action</IonCol>
-                                    </IonRow>
-                                        {/* Table Data */}
-                                    {profiles.map((profile, index) => (
+                        {error && (
+                            <div className="ion-margin-bottom ion-color-danger">
+                                <IonText color="danger">{error}</IonText>
+                            </div>
+                        )}
+                    
+                        <IonGrid>
+                            <IonCard style={{ border: "1px solid #000",'--background':'#ffffffff' }}>
+                                <IonCardContent>
+                                    <IonGrid style={{ "--ion-grid-column-padding": "8px" }}>
+                                        {/* Table Header */}
                                         <IonRow
-                                        key={index}
-                                        style={{
-                                            borderBottom:
-                                            index < profiles.length - 1
-                                                ? "1px solid #ccc"
-                                                : "none",
-                                            color: "#000",
-                                        }}
-                                        className="ion-align-items-center"
-                                        >
-                                        <IonCol>
-                                          {profile.firstName  || "No Name"} {profile.lastName || ""}
-                                          <pre style={{ fontSize: '10px', color: 'gray' }}>
-                                            ID: {profile.profileid}
-                                          </pre>
-                                        </IonCol>
-                                        <IonCol>{profile.TimeCreated  || new Date().toLocaleDateString()}</IonCol>
-                                        <IonCol size="3">
-                                            <IonButton
-                                            size="small"
-                                            fill="outline"
-                                            color="black"
                                             style={{
-                                                
-                                                color: "#000",
-                                                marginRight: "5px",
+                                            borderBottom: "1px solid #000",
+                                            fontWeight: "bold",
+                                            color: "#000",
+                                            textAlign: "center",
                                             }}
-                                            >
-                                            View
-                                            </IonButton>
-                                            <IonButton
-                                            size="small"
-                                            fill="outline"
-                                            color="black"
-                                            style={{ color: "#000", marginRight: "5px" }}
-                                            >
-                                            Edit
-                                            </IonButton>
-                                        </IonCol>
+                                        >
+                                            <IonCol size="12" size-md="5">Name</IonCol>
+                                            <IonCol size="12" size-md="4">Date Registered</IonCol>
+                                            <IonCol size="12" size-md="3">Action</IonCol>
                                         </IonRow>
-                                    ))}
-                                </IonGrid>
-                            </IonCardContent>
-                        </IonCard>
-                    </IonGrid>
-             </div>
+                                            {/* Table Data */}
+                                        {profiles.map((profile, index) => (
+                                            <IonRow
+                                            key={index}
+                                            style={{
+                                                borderBottom:
+                                                index < profiles.length - 1
+                                                    ? "1px solid #ccc"
+                                                    : "none",
+                                                color: "#000",
+                                                textAlign: "center",
+                                            }}
+                                            className="ion-align-items-center"
+                                            >
+                                            <IonCol size="12" size-md="5">
+                                            {profile.firstName  || "No Name"} {profile.lastName || ""}
+                                            <pre style={{ fontSize: '10px', color: 'black' }}>
+                                                ID: {profile.profileid}
+                                            </pre>
+                                            </IonCol>
+
+                                            <IonCol size="12" size-md="4">{profile.createdAt || "-"}</IonCol>
+                                            <IonCol size='12' size-md='3'>
+                                                <IonButton
+                                                size="small"
+                                                fill="outline"
+                                                color="black"
+                                                style={{ color: "#000",marginRight: "5px",}}
+                                                onClick={() => handleViewProfile(profile.profileid)}
+                                                >
+                                                View
+                                                </IonButton>
+                                                <IonButton
+                                                size="small"
+                                                fill="outline"
+                                                color="black"
+                                                style={{ color: "#000", marginRight: "5px" }}
+                                                >
+                                                Edit
+                                                </IonButton>
+                                            </IonCol>
+                                            </IonRow>
+                                        ))}
+                                    </IonGrid>
+                                </IonCardContent>
+                            </IonCard>
+                        </IonGrid>
+                </IonGrid>
 
                 <IonToast
                     isOpen = {showToast}
@@ -225,7 +234,18 @@ const ProfileManagement: React.FC = () => {
                     onSave = {async (profileData) => {
                       console.log("Saved profile:", profileData);
                       await fetchProfiles();
+                      setToastMessage('Profile added successfully!');
+                      setShowToast(true);
                     }}
+                />
+
+                <ViewProfileModal
+                    isOpen={showViewModal}
+                    onClose={() => {
+                        setShowViewModal(false);
+                        setSelectedProfileId(null);
+                    }}
+                    profileId={selectedProfileId}
                 />
             </IonContent>
         </IonPage>
