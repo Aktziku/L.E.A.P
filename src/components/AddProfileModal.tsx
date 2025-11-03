@@ -419,7 +419,9 @@ const Income = [
             <IonContent className="ion-padding" style={{ "--background": "#fff" }}>
           <IonCard style={{ borderRadius: "15px", boxShadow: "0 0 10px #ccc", "--background": "#fff" }}>
             <IonCardContent>
-              <h2 style={{ color: "black", fontWeight: "bold", backgroundColor: '#fff', padding: '10px', fontSize: '2rem' }}>Registration</h2>
+              <h2 style={{ color: "black", fontWeight: "bold", backgroundColor: '#fff', padding: '10px', fontSize: '2rem', textAlign: 'center' }}>
+                Registration Form
+              </h2>
 
             {/* BASIC INFORMATION */}
             <IonItemGroup>

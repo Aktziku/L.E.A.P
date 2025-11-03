@@ -191,8 +191,7 @@ const CaseManagement: React.FC = () => {
                                                 <IonButton
                                                     fill="outline"
                                                     size="small"
-                                                    color="black"
-                                                    style={{ color: "#000", marginRight: "5px" }}
+                                                    style={{ marginRight: "5px" }}
                                                     onClick={() => {
                                                         setIsEditing(true);
                                                         setEditingCase(caseItem);

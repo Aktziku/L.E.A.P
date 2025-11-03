@@ -206,8 +206,7 @@ const ProfileManagement: React.FC = () => {
                                                 <IonButton
                                                 size="small"
                                                 fill="outline"
-                                                color="black"
-                                                style={{ color: "#000", marginRight: "5px" }}
+                                               style={{ marginRight: "5px" }}
                                                 >
                                                 Edit
                                                 </IonButton>

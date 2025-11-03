@@ -45,7 +45,7 @@ const Register: React.FC = () => {
     const handleSignup = async () => {
          setShowVerifycationModal(false);
          try {
-        // Sign up in Supabase authentication first
+        
         const { data: authData, error: authError } = await supabase.auth.signUp({ 
             email, 
             password,
@@ -71,7 +71,7 @@ const Register: React.FC = () => {
                     email: email,
                     userfirstName: FirstName,
                     userlastName: LastName,
-                    role: 'user' // Set default role
+                    role: 'user' 
                 }
             ]);
 

@@ -207,7 +207,7 @@ const Login: React.FC = () => {
                                                 marginTop: '10px',
                                             }}
                                         >
-                                            Don't have an account? <a  href="/TPMSS/Register">Sign up</a>
+                                            Don't have an account? <a  href="/Register">Sign up</a>
                                         </p>
                                     </div>
                                 </IonCardContent>

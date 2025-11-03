@@ -12,10 +12,6 @@ interface EducationProps {
    status: string;
    institutionOrCenter: string;
    enroll_dropout_Date: string;
-   elementary: string;
-   juniorHigh: string;
-   seniorHigh: string;
-   college: string;
    firstName?: string;
    lastName?: string;
 };
@@ -53,10 +49,6 @@ const Education: React.FC = () => {
                     status,
                     institutionOrCenter,
                     enroll_dropout_Date,
-                    elementary,
-                    juniorHigh,
-                    seniorHigh,
-                    college,
                     profile:profileid (firstName,lastName)
                     `);
 
@@ -229,8 +221,7 @@ const Education: React.FC = () => {
                                                 <IonButton
                                                 size="small"
                                                 fill="outline"
-                                                color="black"
-                                                style={{ color: "#000", marginRight: "5px" }}
+                                                style={{ marginRight: "5px" }}
                                                 onClick={() => {
                                                             setIsEditing(true);
                                                             setEditingEducation(education);
