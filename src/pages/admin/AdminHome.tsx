@@ -1,5 +1,6 @@
 import {
     IonApp,
+    IonButton,
     IonContent,
     IonFooter,
     IonHeader,
@@ -8,11 +9,12 @@ import {
     IonItem,
     IonLabel,
     IonList,
+    IonMenu,
+    IonMenuButton,
+    IonMenuToggle,
     IonPage,
     IonRouterOutlet,
-
     IonSearchbar,
-
     IonSplitPane,
     IonTabBar,
     IonTabButton,
@@ -21,7 +23,7 @@ import {
     useIonRouter
 } from '@ionic/react';
 import { Redirect, useLocation } from 'react-router-dom';
-import { documentAttachOutline, gridOutline, logoIonic, logOutOutline, peopleOutline, personOutline, readerOutline, schoolOutline } from 'ionicons/icons';
+import { documentAttachOutline, gridOutline, logoIonic, logOutOutline, menuOutline, peopleOutline, personOutline, readerOutline, schoolOutline } from 'ionicons/icons';
 import React, { useEffect, useState } from 'react';
 import { Route } from 'react-router';
 import AdminDashboard from './Tabs/AdminDashboard';
@@ -38,6 +40,7 @@ const AdminHome: React.FC = () => {
     const navigation = useIonRouter();
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | undefined>();
@@ -46,7 +49,20 @@ const AdminHome: React.FC = () => {
     const [importing, setImporting] = useState(false);
     
     const [userDetails, setUserDetails] = useState<{role:string} | null>(null);
-    
+
+    // Handle window resize for responsive design
+    useEffect(() => {
+        const handleResize = () => {
+            const mobile = window.innerWidth < 768;
+            setIsMobile(mobile);
+            if (!mobile) {
+                setSidebarOpen(false); // Close mobile menu when switching to desktop
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // array for sidebar items
     const roleTabs: Record<string,Array<{name:string;url:string;icon:string}>> = {
@@ -75,10 +91,6 @@ const AdminHome: React.FC = () => {
 
     const tabsToRender = userDetails?.role ? roleTabs[userDetails.role] || [] : [];
 
-   // console.log(" Current Role:", userDetails?.role);
-   // console.log(" Available Role Keys:", Object.keys(roleTabs));
-    //console.log(" Tabs for this role:", tabsToRender);
-
     // Function to get current page title
     const getCurrentTitle = () => {
         const currentPath = location.pathname;
@@ -86,6 +98,7 @@ const AdminHome: React.FC = () => {
         const currentTab = allTabs.find(tab => tab.url === currentPath);
         return currentTab ? currentTab.name : 'Dashboard';
     };
+
     const fetchProfiles = async (id = "") => {
         if (!id) return;
         setLoading(true);
@@ -95,7 +108,6 @@ const AdminHome: React.FC = () => {
                 .select('*')
                 .eq("auth_id", id)
 
-
             if (error) {
                 setError(error.message);
                 setToastMessage('Error fetching profiles');
@@ -103,9 +115,7 @@ const AdminHome: React.FC = () => {
                 setUserDetails({ role: '' });
             }
             if (data && data.length > 0) {
-                //console.log(data[0])
                 setUserDetails({role:data[0].role})
-                
             } else {
                  console.log("No role found for auth_id:", id);
                  setUserDetails({ role: '' });
@@ -120,7 +130,7 @@ const AdminHome: React.FC = () => {
             setLoading(false);
         }
     };
-    //
+
     const [session, setSession] = useState<Session | null>(null)
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -143,18 +153,139 @@ const AdminHome: React.FC = () => {
                 return;
             }
             localStorage.clear();
-
             navigation.push('/', 'forward', 'replace');
         } catch (error) {
             console.error('Logout error:', error);
         }
     };
 
+    // Sidebar content component (reusable for both desktop and mobile)
+    const SidebarContent = ({ isMobileMenu = false }: { isMobileMenu?: boolean }) => (
+        <div
+            style={{
+                background: '#002d54',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                width: '100%'
+            }}
+        >
+            {/* Mobile menu header */}
+            {isMobileMenu && (
+                <div style={{
+                    padding: '16px',
+                    borderBottom: '1px solid rgba(255,255,255,0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                }}>
+                    <IonTitle style={{ color: '#fff', fontSize: '1.2rem' }}>Menu</IonTitle>
+                </div>
+            )}
+
+            <IonList
+                style={{
+                    background: 'transparent',
+                    marginTop: isMobileMenu ? '0' : '10px',
+                    flex: 1
+                }}
+            >
+                {tabsToRender.map((item, index) => {
+                    const isActive = location.pathname === item.url;
+
+                    return (
+                        <IonMenuToggle key={index} autoHide={false}>
+                            <IonItem
+                                routerLink={item.url}
+                                lines='none'
+                                button
+                                onClick={() => isMobileMenu && setSidebarOpen(false)}
+                                style={{
+                                    '--background': isActive ? '#0d6efd' : 'transparent',
+                                    '--color': '#ffffff',
+                                    margin: '4px 8px',
+                                    borderRadius: '8px',
+                                    transition: 'all 0.2s ease-in-out',
+                                }}
+                            >
+                                <IonIcon
+                                    icon={item.icon}
+                                    slot="start"
+                                    style={{
+                                        fontSize: '20px',
+                                        color: '#ffffff',
+                                        marginRight: '12px'
+                                    }}
+                                />
+                                <IonLabel
+                                    style={{
+                                        color: '#ffffff',
+                                        fontWeight: isActive ? 'bold' : 'normal',
+                                        fontSize: isMobileMenu ? '16px' : '14px'
+                                    }}
+                                >
+                                    {item.name}
+                                </IonLabel>
+                            </IonItem>
+                        </IonMenuToggle>
+                    );
+                })}
+
+                {/* Logout Button */}
+                <IonMenuToggle autoHide={false}>
+                    <IonItem
+                        lines='none'
+                        button
+                        onClick={() => {
+                            handleLogout();
+                            if (isMobileMenu) setSidebarOpen(false);
+                        }}
+                        style={{
+                            '--background': 'rgba(220, 53, 69, 0.2)',
+                            '--color': '#ffffff',
+                            margin: '16px 8px 8px 8px',
+                            borderRadius: '8px',
+                            marginTop: 'auto'
+                        }}
+                    >
+                        <IonIcon
+                            icon={logOutOutline}
+                            slot="start"
+                            style={{
+                                fontSize: '20px',
+                                color: '#ffffff',
+                                marginRight: '12px'
+                            }}
+                        />
+                        <IonLabel
+                            style={{
+                                color: '#ffffff',
+                                fontWeight: 'bold',
+                                fontSize: isMobileMenu ? '16px' : '14px'
+                            }}
+                        >
+                            Logout
+                        </IonLabel>
+                    </IonItem>
+                </IonMenuToggle>
+            </IonList>
+        </div>
+    );
+
     return (
         <IonApp>
-            <IonPage>
-                <IonHeader>
+            {/* Mobile Menu */}
+            <IonMenu
+                contentId="main-content"
+                side="start"
+                type="overlay"
+                disabled={!isMobile}
+            >
+                <SidebarContent isMobileMenu={true} />
+            </IonMenu>
 
+            <IonPage id="main-content">
+                <IonHeader>
                     <IonToolbar
                         style={{
                             '--background':'#002d54',
@@ -162,113 +293,146 @@ const AdminHome: React.FC = () => {
                             '--border-shadow': '0'
                         }}
                     >
+                        {/* Mobile Menu Button */}
+                        {isMobile && (
+                            <IonMenuButton
+                                slot="start"
+                                style={{
+                                    color: '#ffffff',
+                                    '--color': '#ffffff'
+                                }}
+                            />
+                        )}
+
                         {/* Logo and Title */}
                         <div style={{
                             display: 'flex',
-                            alignItems: 'center'
-                            }}
-                            slot='start'
-                        >
-
+                            alignItems: 'center',
+                            marginLeft: isMobile ? '0' : '16px'
+                        }}>
                             <IonTitle
-                                className=''
                                 style={{
-
-                                    marginLeft: 'clamp(16px, 2vw, 22px)',
-                                    fontSize: 'clamp(12px, 2vw, 20px)',
+                                    fontSize: isMobile ? '16px' : 'clamp(16px, 2vw, 20px)',
                                     color: '#F3E8FF',
-                                    
+                                    fontWeight: 'bold'
                                 }}
                             >
                                 {getCurrentTitle()}
                             </IonTitle>
                         </div>
 
-                        {/* Searchbar */}
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center'
-                        }}
-                            slot='end'
+                        {/* Desktop Searchbar */}
+                        {!isMobile && (
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center'
+                            }}
+                                slot='end'
+                            >
+                                <IonSearchbar
+                                    className='ion-margin-end'
+                                    placeholder="Search"
+                                    style={{
+                                        width: 'clamp(200px, 40vw, 400px)',
+                                        '--background': '#ffffff',
+                                        '--border-radius': '20px',
+                                        '--placeholder-color': '#002d54',
+                                        '--placeholder-opacity': '1',
+                                        '--icon-color': '#000000',
+                                        fontSize: 'clamp(12px, 1vw, 14px)',
+                                        color: '#000000',
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </IonToolbar>
+
+                    {/* Mobile Searchbar */}
+                    {isMobile && (
+                        <IonToolbar
+                            style={{
+                                '--background': '#ffffff',
+                                '--border-color': 'transparent'
+                            }}
                         >
                             <IonSearchbar
-                                className='ion-margin-end'
                                 placeholder="Search"
                                 style={{
-                                    width: 'clamp(200px, 40vw, 400px)',
-                                    '--background': '#ffffffff',
-                                    '--border-radius': '20px',
-                                    '--placeholder-color': '#002d54',
-                                    '--placeholder-opacity': '1',
-                                    '--icon-color': '#000000ff',
-                                    fontSize: 'clamp(10px, 1vw, 15px)',
-                                    color: '#000000ff',
+                                    '--background': '#f8f9fa',
+                                    '--border-radius': '12px',
+                                    '--placeholder-color': '#6c757d',
+                                    '--icon-color': '#6c757d',
+                                    margin: '8px'
                                 }}
-                            >
-
-                            </IonSearchbar>
-                        </div>
-                    </IonToolbar>
+                            />
+                        </IonToolbar>
+                    )}
                 </IonHeader>
 
                 <IonContent>
-                    <IonSplitPane when="sm" contentId="main">
-                        {/* Sidebar */}
-                        <div
-                            style={{
-                                width: isHovered ? '250px' : '60px',
-                                transition: 'width 0.3s ease-in-out',
-                                background: '#002d54',
-                                height: '100%',
-                                display: 'flex',
-                                flexDirection: 'column',
-                            }}
-                            onMouseEnter={() => setIsHovered(true)}
-                            onMouseLeave={() => setIsHovered(false)}
-                        >
-                            <IonList
+                    {!isMobile ? (
+                        // Desktop Layout with Split Pane
+                        <IonSplitPane when="md" contentId="main">
+                            {/* Desktop Sidebar */}
+                            <div
                                 style={{
-                                    background: 'transparent',
-                                    marginTop: '10px'
+                                    width: isHovered ? '250px' : '70px',
+                                    transition: 'width 0.3s ease-in-out',
+                                    background: '#002d54',
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    minWidth: '70px'
                                 }}
+                                onMouseEnter={() => setIsHovered(true)}
+                                onMouseLeave={() => setIsHovered(false)}
                             >
-                                {tabsToRender.map((item, index) => {
-                                    const isActive = location.pathname === item.url;
+                                <IonList
+                                    style={{
+                                        background: 'transparent',
+                                        marginTop: '10px',
+                                        flex: 1
+                                    }}
+                                >
+                                    {tabsToRender.map((item, index) => {
+                                        const isActive = location.pathname === item.url;
 
-                                    return (
+                                        return (
                                             <IonItem
                                                 key={index}
                                                 routerLink={item.url}
                                                 lines='none'
                                                 style={{
+                                                    '--background': isActive ? '#0d6efd' : 'transparent',
+                                                    '--color': '#ffffff',
+                                                    margin: '4px 8px',
+                                                    borderRadius: '8px',
+                                                    transition: 'all 0.3s ease-in-out',
+                                                    minHeight: '48px',
                                                     display: 'flex',
-                                                    alignItems: 'center',
-                                                    color: 'white',
-                                                    '--background': isActive ? '#0d6efd' : 'transparent', 
-                                                    '--color': '#ffffff',                              
-                                                    margin: '8px 0px',
-                                                    transition: '0.3s ease-in-out', 
+                                                    alignItems: 'center'
                                                 }}
                                             >
                                                 <div>
                                                 <IonIcon
                                                     icon={item.icon}
                                                     style={{
-                                                        fontSize: '24px',
-                                                        marginRight: isHovered ? '15px' : '0px',
-                                                        color: isActive ? '#ffffff' : 'white',
-                                                        transition: 'margin 0.3s ease-in-out, color 0.3s ease-in-out',
+                                                        fontSize: '20px',
+                                                        color: '#ffffff',
+                                                        marginRight: isHovered ? '12px' : '0px',
+                                                        transition: 'margin 0.3s ease-in-out'
                                                     }}
                                                 />
                                                 </div>
                                                 {isHovered && (
                                                     <IonLabel
                                                         style={{
-                                                            color: isActive ? '#ffffff' : 'white',
+                                                            color: '#ffffff',
+                                                            fontWeight: isActive ? 'bold' : 'normal',
                                                             opacity: isHovered ? 1 : 0,
+                                                            transition: 'opacity 0.3s ease-in-out',
                                                             whiteSpace: 'nowrap',
-                                                            transition: 'color 0.3s ease-in-out',
-                                                            fontWeight: isActive ? 'bold' : 'normal'
+                                                            fontSize: '14px'
                                                         }}
                                                     >
                                                         {item.name}
@@ -278,69 +442,79 @@ const AdminHome: React.FC = () => {
                                         );
                                     })}
 
-
-                                {/* Logout Button */}
-                                <IonItem
-                                    lines='none'
-                                    button
-                                    onClick={handleLogout}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        color: '#fdedf4ff',
-                                        '--background': 'transparent',
-                                        '--color': 'white',
-                                        transition: '0.3s ease-in-out',
-                                        margin: '8px 0px',
-                                        background: 'rgba(14, 0, 15, 0.15)',
-                                    }}
-                                >
-                                    <div
+                                    {/* Desktop Logout Button */}
+                                    <IonItem
+                                        lines='none'
+                                        button
+                                        onClick={handleLogout}
                                         style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            width: '40px'
+                                            '--background': 'rgba(220, 53, 69, 0.2)',
+                                            '--color': '#ffffff',
+                                            margin: '16px 8px 8px 8px',
+                                            borderRadius: '8px',
+                                            marginTop: 'auto',
+                                            minHeight: '48px'
                                         }}
                                     >
+                                        <div>
                                         <IonIcon
                                             icon={logOutOutline}
                                             style={{
-                                                fontSize: '24px',
-                                                color: 'white',
-                                                transition: 'margin 0.3s ease-in-out',
+                                                fontSize: '20px',
+                                                color: '#ffffff',
+                                                marginRight: isHovered ? '12px' : '0px',
+                                                transition: 'margin 0.3s ease-in-out'
                                             }}
                                         />
-
-                                    </div>
-
-                                    {isHovered && (
-                                        <div style={{ marginLeft: '8px' }}>
-                                        <IonLabel
-                                            style={{
-                                                color: '#fdedf4ff',
-                                                transition: 'color 0.3s ease-in-out',
-                                                opacity: isHovered ? 1 : 0,
-                                                whiteSpace: 'nowrap',
-                                                fontWeight: 'bold',
-                                              
-                                            }}
-                                        >
-                                            LogOut
-                                        </IonLabel>
                                         </div>
-                                    )}
+                                        {isHovered && (
+                                            <IonLabel
+                                                style={{
+                                                    color: '#ffffff',
+                                                    fontWeight: 'bold',
+                                                    opacity: isHovered ? 1 : 0,
+                                                    transition: 'opacity 0.3s ease-in-out',
+                                                    whiteSpace: 'nowrap',
+                                                    fontSize: '14px'
+                                                }}
+                                            >
+                                                Logout
+                                            </IonLabel>
+                                        )}
+                                    </IonItem>
+                                </IonList>
+                            </div>
 
-                                </IonItem>
-                            </IonList>
-                        </div>
-
-                        {/* Main Content */}
+                            {/* Main Content */}
+                            <div
+                                id="main"
+                                style={{
+                                    flex: 1,
+                                    padding: 'clamp(12px, 2vw, 20px)',
+                                    overflow: 'auto',
+                                    background: '#fdf6f9'
+                                }}
+                            >
+                                <IonRouterOutlet>
+                                    <Route path="/admin" exact>
+                                        <Redirect to="/admin/dashboard" />
+                                    </Route>
+                                    <Route exact path="/admin/dashboard" render={() => <AdminDashboard />} />
+                                    <Route exact path="/admin/profiles" render={() => <ProfileManagement />} />
+                                    <Route exact path="/admin/health" render={() => <HealthMonitoring />} />
+                                    <Route exact path="/admin/education" render={() => <Education />} />
+                                    <Route exact path="/admin/case" render={() => <CaseManagement />} />
+                                    <Route exact path="/admin/userManagement" render={() => <UserManagement />} />
+                                </IonRouterOutlet>
+                            </div>
+                        </IonSplitPane>
+                    ) : (
+                        // Mobile Layout - Full Width Content
                         <div
-                            id="main"
                             style={{
-                                flex: 1,
-                                marginLeft: 0,
-                                padding: 'clamp(10px, 2vw, 20px)',
+                                width: '100%',
+                                height: '100%',
+                                padding: '12px',
                                 overflow: 'auto',
                                 background: '#fdf6f9'
                             }}
@@ -357,11 +531,10 @@ const AdminHome: React.FC = () => {
                                 <Route exact path="/admin/userManagement" render={() => <UserManagement />} />
                             </IonRouterOutlet>
                         </div>
-                    </IonSplitPane>
+                    )}
                 </IonContent>
             </IonPage>
         </IonApp>
-
     );
 };
 
