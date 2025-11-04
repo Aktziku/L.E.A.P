@@ -20,7 +20,7 @@ interface formState {
     pregnancy_status: string;
     stage_of_pregnancy: string;
     medical_history: string[];
-
+    medical_history_others: string;
     types_of_support: string[];
     num_of_pregnancies: number;
     tentanus_vacc: boolean;
@@ -37,6 +37,7 @@ const emptyForm: formState = {
     pregnancy_status: '',
     stage_of_pregnancy: '',
     medical_history: [],
+    medical_history_others: '',
     types_of_support: [],
     num_of_pregnancies: 0,
     tentanus_vacc: false,
@@ -51,7 +52,6 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
     const [profiles, setProfiles] = useState<ProfileOption[]>([]);
     const [loading, setLoading] = useState(false);
     const [save, setSave] = useState(false);
-    const [prefillLoading, setPrefillLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [form, setForm] = useState<formState>(emptyForm);
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -115,75 +115,16 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
         }
     };
 
-    const handleProfileSelect = async (profile: ProfileOption) => {
-        
+    const handleProfileSelect = (profile: ProfileOption) => {
         setError(null);
         setShowSuggestions(false);
         setFilteredProfiles([]);
-        setPrefillLoading(true);
 
-        try {
-        const {data,error} = await supabase
-            .from('maternalhealthRecord')
-            .select('*')
-            .eq('profileid', profile.profileid)
-
-            //console.log('=== QUERY RESULT ===');
-            //console.log('All matching records:', data);
-            //console.log('Error:', error);
-           // console.log('Number of records found:', data?.length);
-
-            if (error) {
-                console.error('Database error:', error);
-                setError(error.message);
-                setPrefillLoading(false);
-                return;
-            } 
-            if (data && data.length > 0) {
-
-                 const latestRecord = data.reduce((prev, current) => 
-                (current.health_id > prev.health_id) ? current : prev
-            );
-                console.log('Latest record:', latestRecord);
-                const medicalHistoryArray = latestRecord.medical_history 
-                ? latestRecord.medical_history.split(',').map((item: string) => item.trim()) 
-                : [];
-            const typesOfSupportArray = latestRecord.types_of_support 
-                ? latestRecord.types_of_support.split(',').map((item: string) => item.trim()) 
-                : [];
-
-                setForm({
-                profileid: profile.profileid,
-                profileSearch: `${profile.lastName ?? ''}, ${profile.firstName ?? ''} (ID: ${profile.profileid})`,
-                pregnancy_status: latestRecord.pregnancy_status || '',
-                stage_of_pregnancy: latestRecord.stage_of_pregnancy || '',
-                medical_history: medicalHistoryArray,
-                types_of_support: typesOfSupportArray,
-                num_of_pregnancies: latestRecord.num_of_pregnancies || 0,
-                tentanus_vacc: latestRecord.tentanus_vacc || false,
-                tetanus_dose: latestRecord.tetanus_dose || 0,
-                date_of_last_mens_period: latestRecord.date_of_last_mens_period || '',
-                height: latestRecord.height || 0,
-                weight: latestRecord.weight || 0,
-                temperature: latestRecord.temperature || 0,
-            });
-                //console.log(' Form updated with data!');
-
-            } else {
-                //console.log('No existing health record found for this profile');
-                setForm ({
-                    ...emptyForm,
-                    profileid: profile.profileid,
-                    profileSearch: `${profile.lastName ?? ''}, ${profile.firstName ?? ''} (ID: ${profile.profileid})`,
-                });
-            }
-        } catch (error) {
-            //console.error('Error fetching health record:', error);
-            setError('An unexpected error occurred while fetching health record.');
-        } finally {
-
-            setPrefillLoading(false);
-        }
+        setForm({
+            ...emptyForm,
+            profileid: profile.profileid,
+            profileSearch: `${profile.lastName ?? ''}, ${profile.firstName ?? ''} (ID: ${profile.profileid})`,
+        });
     };
 
     const handleChange = <K extends keyof formState>(key: K, value: formState[K]) => {
@@ -219,6 +160,7 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
 
         const medicalHistoryString = [
             ...form.medical_history,
+            ...(form.medical_history_others ? [`Others: ${form.medical_history_others}`] : [])
         ].join(',');
 
         const payload ={
@@ -275,17 +217,6 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
 
     const supportTypes = ["Family Support", "Counseling",];
 
-    const responsiveRow: React.CSSProperties = {
-        display: 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
-        gap: isMobile ? '10px' : '20px',
-        width: '100%',
-    };
-
-    const responsiveCol: React.CSSProperties = {
-        flex: 1,
-        minWidth: isMobile ? '100%' : '48%',
-    };
     return (
         <IonModal isOpen={isOpen} onDidDismiss={onClose} style={{'--width':'100%','--height':'100%',}}>
             <IonHeader>
@@ -349,12 +280,9 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
                                             placeholder="Type name to search..."
                                             value={form.profileSearch}
                                             onIonInput={(event) => handleProfileSearch(event.detail.value ?? '')}
-                                            disabled={save || showEmptyProfilesMessage || prefillLoading}
+                                            disabled={save || showEmptyProfilesMessage}
                                             style={{ "--color": "#000" }}
                                         />
-                                        {prefillLoading && (
-                                            <IonSpinner slot="end" name="dots" style={{ marginRight: '10px' }} />
-                                        )}
                                     </IonItem>
                                     
                                     {/* Suggestions Dropdown */}
@@ -416,7 +344,7 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
                                                 value={form.pregnancy_status}
                                                 onIonChange={(e) => handleChange('pregnancy_status', e.detail.value)}
                                                 style={{ "--color": "#000" }}
-                                                disabled={save || prefillLoading}
+                                                disabled={save}
                                             >
                                                 <IonSelectOption value="Pregnant">Pregnant</IonSelectOption>
                                                 <IonSelectOption value="Not Pregnant">Not Pregnant</IonSelectOption>
@@ -432,9 +360,10 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
                                                 labelPlacement="floating"
                                                 fill="outline"
                                                 value={form.stage_of_pregnancy}
-                                                onIonChange={(e) => handleChange('stage_of_pregnancy', e.detail.value)}
+                                                onIonChange={(e) => handleChange('stage_of_pregnancy', e.detail.value
+                                                )}
                                                 style={{ "--color": "#000" }}
-                                                disabled={save || prefillLoading}
+                                                disabled={save || form.pregnancy_status !== 'Pregnant'}
                                             >
                                                 <IonSelectOption value="First Trimester (1-12 weeks)">First Trimester (1-12 weeks)</IonSelectOption>
                                                 <IonSelectOption value="Second Trimester (13-26 weeks)">Second Trimester (13-26 weeks)</IonSelectOption>
@@ -458,7 +387,7 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
                                                 value={form.num_of_pregnancies}
                                                 onIonInput={(e) => handleChange('num_of_pregnancies', parseInt(e.detail.value ?? '0'))}
                                                 style={{ "--color": "#000" }}
-                                                disabled={save || prefillLoading}
+                                                disabled={save}
                                             />
                                         </IonItem>
                                     </IonCol>
@@ -474,7 +403,7 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
                                                 value={form.date_of_last_mens_period}
                                                 onIonInput={(e) => handleChange('date_of_last_mens_period', e.detail.value ?? '')}
                                                 style={{ "--color": "#000" }}
-                                                disabled={save || prefillLoading}
+                                                disabled={save}
                                             />
                                         </IonItem>
                                     </IonCol>
@@ -502,7 +431,7 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
                                                 <IonCheckbox
                                                     checked={form.medical_history.includes(condition)}
                                                     onIonChange={(e) => handleCheckbox('medical_history', condition, e.detail.checked)}
-                                                    disabled={save || prefillLoading}
+                                                    disabled={save}
                                                     labelPlacement="end"
                                                 >
                                                     {condition}
@@ -512,6 +441,25 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
                                     ))}
                                 </IonRow>
                             </IonGrid>
+
+                            {/* Others input field */}
+                            <IonRow>
+                                <IonCol>
+                                    <IonItem lines="none" style={{ "--background": "#fff" }}>
+                                        <IonLabel position="stacked" style={{ color: "#000", fontWeight: "bold", fontSize: "0.9rem" }}>
+                                            Others (Specify)
+                                        </IonLabel>
+                                        <IonInput
+                                            className='ion-margin'
+                                            style={{ "--color": "#000" }}
+                                            value={form.medical_history_others}
+                                            onIonInput={(e) => handleChange('medical_history_others', e.detail.value ?? '')}
+                                            placeholder="Specify other medical conditions"
+                                            disabled={save}
+                                        />
+                                    </IonItem>
+                                </IonCol>
+                            </IonRow>
                         </IonItemGroup>
 
                         {/* VACCINATION/IMMUNIZATION */}
@@ -538,7 +486,7 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
                                                     handleChange('tetanus_dose', 0);
                                                 }
                                             }}
-                                            disabled={save || prefillLoading}
+                                            disabled={save}
                                             labelPlacement="end"
                                         >
                                             Tetanus Vaccination Received
@@ -559,7 +507,7 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
                                             value={form.tetanus_dose}
                                             onIonInput={(e) => handleChange('tetanus_dose', parseInt(e.detail.value ?? '0'))}
                                             style={{ "--color": "#000" }}
-                                            disabled={save || prefillLoading || !form.tentanus_vacc}
+                                            disabled={save || !form.tentanus_vacc}
                                         />
                                     </IonItem>
                                 </IonCol>
@@ -590,7 +538,7 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
                                                     value={form.height}
                                                     onIonInput={(e) => handleChange('height', parseFloat(e.detail.value ?? '0'))}
                                                     style={{ "--color": "#000" }}
-                                                    disabled={save || prefillLoading}
+                                                    disabled={save}
                                                 />
                                             </IonItem>
                                         </IonCol>
@@ -606,7 +554,7 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
                                                     value={form.weight}
                                                     onIonInput={(e) => handleChange('weight', parseFloat(e.detail.value ?? '0'))}
                                                     style={{ "--color": "#000" }}
-                                                    disabled={save || prefillLoading}
+                                                    disabled={save}
                                                 />
                                             </IonItem>
                                         </IonCol>
@@ -622,7 +570,7 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
                                                     value={form.temperature}
                                                     onIonInput={(e) => handleChange('temperature', parseFloat(e.detail.value ?? '0'))}
                                                     style={{ "--color": "#000" }}
-                                                    disabled={save || prefillLoading}
+                                                    disabled={save}
                                                 />
                                             </IonItem>
                                         </IonCol>
@@ -649,7 +597,7 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
                                             <IonCheckbox
                                                 checked={form.types_of_support.includes(support)}
                                                 onIonChange={(e) => handleCheckbox('types_of_support', support, e.detail.checked)}
-                                                disabled={save || prefillLoading}
+                                                disabled={save}
                                                 labelPlacement="end"
                                             >
                                                 {support}
@@ -666,13 +614,13 @@ const AddHealthRecord: React.FC<AddHealthRecordProps> = ({ isOpen, onClose, onSa
                                 <IonButton 
                                     color="primary" 
                                     onClick={handleSave}
-                                    disabled={save || prefillLoading}
+                                    disabled={save}
                                 >
                                     {save ? 'Saving...' : 'Save'}
                                 </IonButton>
                             </IonCol>
                             <IonCol size="auto">
-                                <IonButton color="medium" fill="outline" onClick={onClose} disabled={save || prefillLoading}>
+                                <IonButton color="medium" fill="outline" onClick={onClose} disabled={save}>
                                     Cancel
                                 </IonButton>
                             </IonCol>

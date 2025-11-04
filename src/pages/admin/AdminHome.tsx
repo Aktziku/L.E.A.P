@@ -23,7 +23,7 @@ import {
     useIonRouter
 } from '@ionic/react';
 import { Redirect, useLocation } from 'react-router-dom';
-import { documentAttachOutline, gridOutline, logoIonic, logOutOutline, menuOutline, peopleOutline, personOutline, readerOutline, schoolOutline } from 'ionicons/icons';
+import { documentAttachOutline, gridOutline, logoIonic, logOutOutline, menuOutline, peopleOutline, personOutline, readerOutline, schoolOutline, statsChartOutline } from 'ionicons/icons';
 import React, { useEffect, useState } from 'react';
 import { Route } from 'react-router';
 import AdminDashboard from './Tabs/AdminDashboard';
@@ -34,6 +34,8 @@ import CaseManagement from './Tabs/CaseManagement';
 import { Session } from '@supabase/supabase-js';
 import UserManagement from './Tabs/UserManagement';
 import HealthMonitoring from './Tabs/HealthMonitoring';
+import Reports from './Tabs/Reports';
+
 
 const AdminHome: React.FC = () => {
     const [isHovered, setIsHovered] = useState(false);
@@ -49,6 +51,7 @@ const AdminHome: React.FC = () => {
     const [importing, setImporting] = useState(false);
     
     const [userDetails, setUserDetails] = useState<{role:string} | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Handle window resize for responsive design
     useEffect(() => {
@@ -56,7 +59,7 @@ const AdminHome: React.FC = () => {
             const mobile = window.innerWidth < 768;
             setIsMobile(mobile);
             if (!mobile) {
-                setSidebarOpen(false); // Close mobile menu when switching to desktop
+                setSidebarOpen(false); 
             }
         };
 
@@ -72,6 +75,7 @@ const AdminHome: React.FC = () => {
             { name: 'Health Monitoring', url: '/admin/health', icon: readerOutline},
             { name: 'Education And Training', url: '/admin/education', icon: schoolOutline },
             { name: 'Case Management', url:'/admin/case', icon: documentAttachOutline },
+            { name: 'Reports & Analytics', url:'/admin/reports', icon: statsChartOutline },
             { name: 'User Management', url:'/admin/userManagement', icon: personOutline },
         ],
 
@@ -97,6 +101,24 @@ const AdminHome: React.FC = () => {
         const allTabs = Object.values(roleTabs).flat();
         const currentTab = allTabs.find(tab => tab.url === currentPath);
         return currentTab ? currentTab.name : 'Dashboard';
+    };
+
+     const getSearchPlaceholder = () => {
+        const currentPath = location.pathname;
+        switch(currentPath) {
+            case '/admin/profiles':
+                return 'Search profiles...';
+            case '/admin/health':
+                return 'Search health records...';
+            case '/admin/education':
+                return 'Search education records...';
+            case '/admin/case':
+                return 'Search cases...';
+            case '/admin/userManagement':
+                return 'Search users...';
+            default:
+                return 'Search...';
+        }
     };
 
     const fetchProfiles = async (id = "") => {
@@ -159,6 +181,9 @@ const AdminHome: React.FC = () => {
         }
     };
 
+    useEffect(() => {
+        setSearchQuery('');
+    }, [location.pathname]);
     // Sidebar content component (reusable for both desktop and mobile)
     const SidebarContent = ({ isMobileMenu = false }: { isMobileMenu?: boolean }) => (
         <div
@@ -331,7 +356,10 @@ const AdminHome: React.FC = () => {
                             >
                                 <IonSearchbar
                                     className='ion-margin-end'
-                                    placeholder="Search"
+                                    placeholder={getSearchPlaceholder()}
+                                    value={searchQuery}
+                                    onIonChange={e => setSearchQuery(e.detail.value!)} 
+                                    debounce={300}
                                     style={{
                                         width: 'clamp(200px, 40vw, 400px)',
                                         '--background': '#ffffff',
@@ -356,7 +384,10 @@ const AdminHome: React.FC = () => {
                             }}
                         >
                             <IonSearchbar
-                                placeholder="Search"
+                                placeholder={getSearchPlaceholder()}
+                                value={searchQuery}
+                                onIonChange={e => setSearchQuery(e.detail.value!)} 
+                                debounce={300}
                                 style={{
                                     '--background': '#f8f9fa',
                                     '--border-radius': '12px',
@@ -500,11 +531,12 @@ const AdminHome: React.FC = () => {
                                         <Redirect to="/admin/dashboard" />
                                     </Route>
                                     <Route exact path="/admin/dashboard" render={() => <AdminDashboard />} />
-                                    <Route exact path="/admin/profiles" render={() => <ProfileManagement />} />
-                                    <Route exact path="/admin/health" render={() => <HealthMonitoring />} />
-                                    <Route exact path="/admin/education" render={() => <Education />} />
-                                    <Route exact path="/admin/case" render={() => <CaseManagement />} />
-                                    <Route exact path="/admin/userManagement" render={() => <UserManagement />} />
+                                    <Route exact path="/admin/profiles" render={() => <ProfileManagement searchQuery={searchQuery} />} />
+                                    <Route exact path="/admin/health" render={() => <HealthMonitoring searchQuery={searchQuery} />} />
+                                    <Route exact path="/admin/education" render={() => <Education searchQuery={searchQuery} />} />
+                                    <Route exact path="/admin/case" render={() => <CaseManagement searchQuery={searchQuery} />} />
+                                    <Route exact path="/admin/reports" render={() => <Reports />} />
+                                    <Route exact path="/admin/userManagement" render={() => <UserManagement searchQuery={searchQuery} />} />
                                 </IonRouterOutlet>
                             </div>
                         </IonSplitPane>
@@ -523,12 +555,13 @@ const AdminHome: React.FC = () => {
                                 <Route path="/admin" exact>
                                     <Redirect to="/admin/dashboard" />
                                 </Route>
-                                <Route exact path="/admin/dashboard" render={() => <AdminDashboard />} />
-                                <Route exact path="/admin/profiles" render={() => <ProfileManagement />} />
-                                <Route exact path="/admin/health" render={() => <HealthMonitoring />} />
-                                <Route exact path="/admin/education" render={() => <Education />} />
-                                <Route exact path="/admin/case" render={() => <CaseManagement />} />
-                                <Route exact path="/admin/userManagement" render={() => <UserManagement />} />
+                                <Route exact path="/admin/dashboard" render={() => <AdminDashboard  />} />
+                                <Route exact path="/admin/profiles" render={() => <ProfileManagement searchQuery={searchQuery} />} />
+                                <Route exact path="/admin/health" render={() => <HealthMonitoring searchQuery={searchQuery} />} />
+                                <Route exact path="/admin/education" render={() => <Education searchQuery={searchQuery} />} />
+                                <Route exact path="/admin/case" render={() => <CaseManagement searchQuery={searchQuery} />} />
+                                <Route exact path="/admin/reports" render={() => <Reports />} />
+                                <Route exact path="/admin/userManagement" render={() => <UserManagement searchQuery={searchQuery} />} />
                             </IonRouterOutlet>
                         </div>
                     )}

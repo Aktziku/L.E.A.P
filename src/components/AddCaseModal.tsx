@@ -20,7 +20,6 @@ interface FormState {
     profileid: number | null;
     profileSearch: string;
     case_type: string;
-    case_status: string;
     case_created_by: string;
     guid_received_from: string;
     guidance_type: string;
@@ -28,13 +27,14 @@ interface FormState {
     fam_sup_received_from: string;
     family_support_type: string;
     family_support_frequency: string;
+    received_GC: string;
+    received_FS: string;
 }
 
 const emptyForm: FormState= {
     profileid: null,
     profileSearch: '',
     case_type: '',
-    case_status: '',
     case_created_by: '',
     guid_received_from: '',
     guidance_type: '',
@@ -42,6 +42,8 @@ const emptyForm: FormState= {
     fam_sup_received_from: '',
     family_support_type: '',
     family_support_frequency: '',
+    received_GC: '',
+    received_FS: '',
 }
 const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) => {
 
@@ -54,15 +56,47 @@ const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) 
         const [profileLoading, setProfileLoading] = useState(false);
         const [filterProfile, setFilterProfile] = useState<ProfileOption[]>([]);
         const [showSuggestions, setShowSuggestions] = useState(false);
+        const [currentUserName, setCurrentUserName] = useState<string>('');
 
-    useEffect(() =>{
+        useEffect(() =>{
             if (!isOpen) {
                 return;
             }
             setForm(emptyForm);
             setError(null);
             void loadProfiles();
+            void loadCurrentUser();
         }, [isOpen]);
+
+        const loadCurrentUser = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (session?.user?.id) {
+                    
+                    const { data: userData, error: userError } = await supabase
+                        .from('users')
+                        .select('userfirstName, userlastName')
+                        .eq('auth_id', session.user.id)
+                        .single();
+
+                        
+                    if (userError) {
+                        console.error('Error fetching user data:', userError);
+                    } else if (userData) {
+                        const fullName = `${userData.userfirstName || ''} ${userData.userlastName || ''}`.trim();
+                        
+                        setCurrentUserName(fullName);
+                        setForm((prevForm) => ({
+                            ...prevForm,
+                            case_created_by: fullName
+                        }));
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading current user:', error);
+            }
+        };
         const handleProfileSearch = (searchValue: string) => {
             setForm((prevForm) => ({
                 ...prevForm,
@@ -146,7 +180,6 @@ const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) 
             caseid: newCaseId,
             profileid: form.profileid,
             case_type: form.case_type || null,
-            case_status: form.case_status || null,
             case_created_by: form.case_created_by || null,
             guid_received_from: form.guid_received_from || null,
             guidance_type: form.guidance_type || null,
@@ -154,6 +187,8 @@ const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) 
             fam_sup_received_from: form.fam_sup_received_from || null,
             family_support_type: form.family_support_type || null,
             family_support_frequency: form.family_support_frequency || null,
+            received_GC: form.received_GC || null,
+            received_FS: form.received_FS || null,
         };
         const { error } = await supabase
             .from('caseManagement')
@@ -193,7 +228,7 @@ const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) 
                             fontWeight: 'bold',
                         }}
                     >
-                        {isEditing ? 'Edit Education Record' : 'Add Education Record'}
+                        {isEditing ? 'Edit Case Record' : 'Add Case Record'}
                     </IonTitle>
 
                     {/* Close button */}
@@ -320,11 +355,12 @@ const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) 
                                                 <IonRadioGroup
                                                     
                                                     className='ion-margin-top'
-                                                    value={form.guid_received_from}
+                                                    value={form.received_GC}
                                                     onIonChange={(e) =>{
-                                                        handleChange('guid_received_from', e.detail.value);
+                                                        handleChange('received_GC', e.detail.value);
                                                         if (e.detail.value === 'No') {
                                                             handleChange('guidance_type','');
+                                                            handleChange('guid_received_from','');
                                                             handleChange('guidance_frequency','');
                                                         }
                                                     }}
@@ -349,7 +385,21 @@ const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) 
                                                     labelPlacement="floating"
                                                     value={form.guidance_type}
                                                     onIonInput={(event) => handleChange('guidance_type', event.detail.value ?? '')}
-                                                    disabled={saved || form.guid_received_from !== 'Yes'}
+                                                    disabled={saved || form.received_GC !== 'Yes'}
+                                                />
+                                            </IonItem>
+
+                                            {/* recieved From Whom */}
+                                            <IonItem lines='none' style={{ "--background": "#fff", "--color": "#000" }}>
+                                                <IonInput
+                                                    className='ion-margin'
+                                                    label="Received From Whom?"
+                                                    fill='outline'
+                                                    type="text"
+                                                    labelPlacement="floating"
+                                                    value={form.guid_received_from}
+                                                    onIonInput={(event) => handleChange('guid_received_from', event.detail.value ?? '')}
+                                                    disabled={saved || form.received_GC !== 'Yes'}
                                                 />
                                             </IonItem>
 
@@ -363,7 +413,7 @@ const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) 
                                                     value={form.guidance_frequency}
                                                     style={{ "--color": "#000" }}
                                                     onIonChange={(e) => handleChange("guidance_frequency", e.detail.value)}
-                                                    disabled={saved || form.guid_received_from !== 'Yes'}
+                                                    disabled={saved || form.received_GC !== 'Yes'}
                                                 >
                                                     <IonSelectOption value="Weekly">Weekly</IonSelectOption>
                                                     <IonSelectOption value="Monthly">Monthly</IonSelectOption>
@@ -395,11 +445,12 @@ const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) 
 
                                                 <IonRadioGroup
                                                     className='ion-margin-top'
-                                                    value={form.fam_sup_received_from}
+                                                    value={form.received_FS}
                                                     onIonChange={(e) =>{
-                                                        handleChange('fam_sup_received_from', e.detail.value);
+                                                        handleChange('received_FS', e.detail.value);
                                                         if (e.detail.value === 'No') {
                                                             handleChange('family_support_type','');
+                                                            handleChange('fam_sup_received_from','');
                                                             handleChange('family_support_frequency','');
                                                         }
                                                     }}
@@ -424,7 +475,21 @@ const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) 
                                             value={form.family_support_type}
                                             onIonInput={(event) => handleChange("family_support_type", event.detail.value ?? '')}
                                             style={{ '--color': '#000000' }}
-                                            disabled={form.fam_sup_received_from !== 'Yes'}
+                                            disabled={form.received_FS !== 'Yes'}
+                                        />
+                                    </IonItem>
+                                    {/* recieved From Whom */}
+                                    <IonItem lines="none" style={{ "--background": "#fff" }}>
+                                        <IonInput
+                                            className='ion-margin'
+                                            label="Received From Whom?"
+                                            labelPlacement="floating"
+                                            fill="outline"
+                                            type="text"
+                                            value={form.fam_sup_received_from}
+                                            onIonInput={(event) => handleChange("fam_sup_received_from", event.detail.value ?? '')}
+                                            style={{ '--color': '#000000' }}
+                                            disabled={form.received_FS !== 'Yes'}
                                         />
                                     </IonItem>
 
@@ -438,7 +503,7 @@ const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) 
                                             value={form.family_support_frequency}
                                             style={{ "--color": "#000" }}
                                             onIonChange={(e) => handleChange("family_support_frequency", e.detail.value)}
-                                            disabled={form.fam_sup_received_from !== 'Yes'}
+                                            disabled={form.received_FS !== 'Yes'}
                                         >
                                             <IonSelectOption value="Weekly">Weekly</IonSelectOption>
                                             <IonSelectOption value="Monthly">Monthly</IonSelectOption>

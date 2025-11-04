@@ -13,6 +13,8 @@ import {
     IonCol,
     useIonRouter,
     IonSpinner,
+    IonText,
+    IonSkeletonText,
 } from '@ionic/react';
 import { key, peopleOutline, readerOutline, schoolOutline } from 'ionicons/icons';
 import React, { useEffect, useState } from 'react';
@@ -58,7 +60,7 @@ const AdminDashboard: React.FC = () => {
         byMunicipality: {},
         byBarangay: {},
     });
-    const [loading, setLoading] = useState(true);
+const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchDashboardStats();
@@ -191,9 +193,79 @@ const AdminDashboard: React.FC = () => {
     if (loading) {
         return (
             <IonPage>
-                <IonContent style={{ '--background': '#ffffff' }}>
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                        <IonSpinner style={{ '--color': '#002d54', width: '50px', height: '50px' }} />
+                <IonContent style={{ '--background': '#ffffffff' }}>
+                    <div style={{ padding: '20px' }}>
+                        {/* Stats Cards Skeleton */}
+                        <IonGrid>
+                            <IonRow>
+                                <IonCol size="12" sizeMd="6">
+                                    <IonCard style={{ margin: '10px', borderRadius: '15px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                                        <IonCardContent style={{ padding: '20px', background: '#ffffffff' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <div style={{ flex: 1 }}>
+                                                    <IonSkeletonText animated style={{ width: '60%', height: '16px', marginBottom: '10px' }} />
+                                                    <IonSkeletonText animated style={{ width: '40%', height: '28px' }} />
+                                                </div>
+                                                <IonSkeletonText animated style={{ width: '65px', height: '65px', borderRadius: '12px' }} />
+                                            </div>
+                                        </IonCardContent>
+                                    </IonCard>
+                                </IonCol>
+                                <IonCol size="12" sizeMd="6">
+                                    <IonCard style={{ margin: '10px', borderRadius: '15px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                                        <IonCardContent style={{ padding: '20px', background: '#ffffffff' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <div style={{ flex: 1 }}>
+                                                    <IonSkeletonText animated style={{ width: '70%', height: '16px', marginBottom: '10px' }} />
+                                                    <IonSkeletonText animated style={{ width: '40%', height: '28px' }} />
+                                                </div>
+                                                <IonSkeletonText animated style={{ width: '65px', height: '65px', borderRadius: '12px' }} />
+                                            </div>
+                                        </IonCardContent>
+                                    </IonCard>
+                                </IonCol>
+                            </IonRow>
+                        </IonGrid>
+
+                        {/* Charts Skeleton */}
+                        <IonGrid>
+                            <IonRow>
+                                <IonCol>
+                                    <IonCard style={{ margin: '20px 0', padding: '20px', borderRadius: '15px' }}>
+                                        <IonCardHeader>
+                                            <IonSkeletonText animated style={{ width: '50%', height: '20px' }} />
+                                        </IonCardHeader>
+                                        <IonCardContent style={{ height: '400px' }}>
+                                            <IonSkeletonText animated style={{ width: '100%', height: '100%', borderRadius: '8px' }} />
+                                        </IonCardContent>
+                                    </IonCard>
+                                </IonCol>
+                            </IonRow>
+
+                            <IonRow>
+                                <IonCol size="12" sizeMd="6">
+                                    <IonCard style={{ margin: '20px 0', padding: '20px', borderRadius: '15px' }}>
+                                        <IonCardHeader>
+                                            <IonSkeletonText animated style={{ width: '60%', height: '20px' }} />
+                                        </IonCardHeader>
+                                        <IonCardContent style={{ height: '400px' }}>
+                                            <IonSkeletonText animated style={{ width: '100%', height: '100%', borderRadius: '8px' }} />
+                                        </IonCardContent>
+                                    </IonCard>
+                                </IonCol>
+
+                                <IonCol size="12" sizeMd="6">
+                                    <IonCard style={{ margin: '20px 0', padding: '20px', borderRadius: '15px' }}>
+                                        <IonCardHeader>
+                                            <IonSkeletonText animated style={{ width: '40%', height: '20px' }} />
+                                        </IonCardHeader>
+                                        <IonCardContent style={{ height: '400px' }}>
+                                            <IonSkeletonText animated style={{ width: '100%', height: '100%', borderRadius: '8px' }} />
+                                        </IonCardContent>
+                                    </IonCard>
+                                </IonCol>
+                            </IonRow>
+                        </IonGrid>
                     </div>
                 </IonContent>
             </IonPage>

@@ -105,9 +105,9 @@ const ViewProfileModal: React.FC<ViewProfileModalProps> = ({ isOpen, onClose, pr
                 ) : profileData ? (
                     <IonCard style={{borderRadius: "15px", boxShadow: "0 0 10px #ccc", "--background": "#fff"}}>
                         <IonCardContent>
-                            <h2 style={{ color: "black", fontWeight: "bold", backgroundColor: '#fff', padding: '10px', fontSize: '2rem' }}>
-                                Profile Details
-                            </h2>
+                            <h2 style={{ color: "black", fontWeight: "bold", backgroundColor: '#fff', padding: '10px', fontSize: '1.5rem', borderBottom: '2px solid #002d54' }}>
+                                    Profile Deatails
+                                </h2>
 
                             {/* Profile Information */}
                             <IonItemGroup>
