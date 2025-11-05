@@ -6,15 +6,16 @@ import AddEnrollRecordModal from '../../../components/AddEnrollRecordModal';
 import ViewEducation from '../../../components/view/ViewEducation';
 
 interface EducationProps {
-   educationid: number;
-   profileid: number;
-   typeOfProgram: string;
-   programCourse: string;
-   status: string;
-   institutionOrCenter: string;
-   enroll_dropout_Date: string;
-   firstName?: string;
-   lastName?: string;
+    educationid: number;
+    profileid: number;
+    typeOfProgram: string;
+    programCourse: string;
+    status: string;
+    institutionOrCenter: string;
+    enroll_dropout_Date: string;
+    gradeLevel: string;
+    firstName?: string;
+    lastName?: string;
 };
 
 interface EducProps {
@@ -33,6 +34,7 @@ const Education: React.FC<EducProps> = ({ searchQuery = '' }) => {
     const [hasFetched, setHasFetched] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     const [selectedEducationId, setSelectedEducationId] = useState<number | null>(null);
+    
 
     useIonViewWillEnter(() => {
         //console.log("Education view entered");
@@ -58,6 +60,7 @@ const Education: React.FC<EducProps> = ({ searchQuery = '' }) => {
                     status,
                     institutionOrCenter,
                     enroll_dropout_Date,
+                    gradeLevel,
                     profile:profileid (firstName,lastName)
                     `);
 
@@ -269,17 +272,6 @@ const Education: React.FC<EducProps> = ({ searchQuery = '' }) => {
                     position = "bottom"
                 />
 
-                <AddEnrollRecordModal
-                    isOpen={showAddModal}
-                    onClose={() => setShowAddModal(false)}
-                    onSave={async (record: any) => {
-                        await fetchEducation();
-                        setShowAddModal(false);
-                        setToastMessage('Education record saved successfully!');
-                        setShowToast(true);
-                    }}
-                />
-
                 <ViewEducation
                     isOpen={showViewModal}
                     onClose={() => {
@@ -287,6 +279,25 @@ const Education: React.FC<EducProps> = ({ searchQuery = '' }) => {
                         setSelectedEducationId(null);
                     }}
                     educationId={selectedEducationId}
+                />
+
+                <AddEnrollRecordModal
+                    isOpen={showAddModal}
+                    onClose={() => {
+                        setShowAddModal(false);
+                        setIsEditing(false);
+                        setEditingEducation(null);
+                    }}
+                    onSave={async (record: any) => {
+                        await fetchEducation();
+                        setShowAddModal(false);
+                        setIsEditing(false);
+                        setEditingEducation(null);
+                        setToastMessage(isEditing ? 'Education record updated successfully!' : 'Education record saved successfully!');
+                        setShowToast(true);
+                    }}
+                    editingEducation={editingEducation}
+                    isEditing={isEditing}
                 />
             </IonContent>
         </IonPage>

@@ -120,7 +120,11 @@ const [loading, setLoading] = useState(true);
             {
                 label: 'Number of Teenage Parents',
                 data: Object.values(stats?.byProvince || {}),
-                backgroundColor: '#002d54',
+                backgroundColor: [
+                '#002d54', '#003d6b', '#004d82', '#005d99',
+                '#006db0', '#007dc7', '#008dde', '#009df5',
+                '#33adff', '#66bdff'
+            ],
                 borderColor: '#001a33',
                 borderWidth: 1,
             },
@@ -132,8 +136,12 @@ const [loading, setLoading] = useState(true);
         datasets: [
             {
                 label: 'Number of Teenage Parents',
-                data: Object.values(stats?.byMunicipality || {}),
-                backgroundColor: '#002d54',
+                data: Object.values(stats?.byMunicipality || {}).slice(0, 10),
+                backgroundColor: [
+                '#002d54', '#003d6b', '#004d82', '#005d99',
+                '#006db0', '#007dc7', '#008dde', '#009df5',
+                '#33adff', '#66bdff'
+            ],
                 borderColor: '#001a33',
                 borderWidth: 1,
             },
@@ -284,7 +292,7 @@ const [loading, setLoading] = useState(true);
                                     title="Total Teenage Parents"
                                     value={stats?.totalTeenAgeParents || 0}
                                     icon={peopleOutline}
-                                    color="#002d54"
+                                    color="#3498db"
                                 />
                             </IonCol>
                             <IonCol size="12" sizeMd="6">

@@ -1,10 +1,11 @@
 import { IonPage, IonContent, IonSpinner } from "@ionic/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useIonRouter } from "@ionic/react";
 import { supabase } from "../utils/supabaseClients";
 
 const AuthCallback: React.FC = () => {
   const router = useIonRouter();
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     const handleOAuth = async () => {
@@ -15,18 +16,20 @@ const AuthCallback: React.FC = () => {
       //console.log('Auth state:', user); // Debug log
 
       if (!user) {
-        router.push("/login", "root", "replace");
+        router.push("/", "root", "replace");
         return;
-      }    // Check if user already exists
+      }
+
+      // Check if user already exists
       const { data: existingAccount, error: fetchError } = await supabase
         .from("users")
-        .select("role, auth_id")
+        .select("role, auth_id, active")
         .eq("email", user.email)
         .maybeSingle();
 
       if (fetchError) {
         console.error("Fetch error:", fetchError.message);
-        router.push("/login", "root", "replace");
+        router.push("/", "root", "replace");
         return;
       }
 
@@ -39,12 +42,24 @@ const AuthCallback: React.FC = () => {
 
         if (updateError) {
           console.error("Update error:", updateError.message);
-          router.push("/login", "root", "replace");
+          router.push("/", "root", "replace");
           return;
         }
       }
 
-      // Insert only if new
+      // Check if existing account is deactivated
+      if (existingAccount && existingAccount.active === false) {
+        setErrorMessage("Your account has been deactivated. Please contact an administrator.");
+        // Sign out the user
+        await supabase.auth.signOut();
+        // Redirect to login after a delay to show the error
+        setTimeout(() => {
+          router.push("/login", "root", "replace");
+        }, 3000);
+        return;
+      }
+
+      // Insert only if new (new users are active by default)
       if (!existingAccount) {
         const { error: insertError } = await supabase.from("users").insert([
           {
@@ -55,6 +70,7 @@ const AuthCallback: React.FC = () => {
             email: user.email,
             role: "user",
             auth_id: user.id,
+            active: true, // New users are active by default
           },
         ]);
 
@@ -72,9 +88,7 @@ const AuthCallback: React.FC = () => {
         .eq("email", user.email)
         .maybeSingle();
 
-
       router.push("/admin", "root", "replace");
-
     };
 
     handleOAuth();
@@ -88,14 +102,27 @@ const AuthCallback: React.FC = () => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          hight: '100vh',
+          flexDirection: 'column',
+          height: '100vh',
         }}
       >
-
-        <IonSpinner
-          name="crescent"
-        />
-        <p>Signing in...</p>
+        {errorMessage ? (
+          <div style={{ 
+            color: '#d32f2f', 
+            fontSize: '18px', 
+            fontWeight: 'bold',
+            padding: '20px',
+            textAlign: 'center'
+          }}>
+            {errorMessage}
+            <p style={{ fontSize: '14px', marginTop: '10px' }}>Redirecting to login...</p>
+          </div>
+        ) : (
+          <>
+            <IonSpinner name="crescent" />
+            <p>Signing in...</p>
+          </>
+        )}
       </IonContent>
     </IonPage>
   );

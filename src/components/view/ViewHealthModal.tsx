@@ -182,8 +182,8 @@ const ViewHealthModal: React.FC<ViewHealthModalProps> = ({ isOpen, onClose, heal
 
             <IonContent className="ion-padding" style={{ '--background': '#f5f5f5' }}>
                 {loading ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
-                        <IonSpinner />
+                    <div style={{ display: 'flex', justifyContent: 'center', height: '100%', alignItems: 'center' }}>
+                        <IonSpinner name="crescent"/>
                     </div>
                 ) : error ? (
                     <IonText color="danger">

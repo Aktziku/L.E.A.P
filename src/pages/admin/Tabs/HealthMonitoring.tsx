@@ -319,7 +319,11 @@ const HealthMonitoring: React.FC<HealthMonitoringProps> = ({ searchQuery = '' })
                                                         size="small"
                                                         fill="outline"
                                                         style={{ marginRight: "5px" }}
-                                                        
+                                                        onClick={() => {
+                                                            setShowAddModal(true);
+                                                            setIsEditing(true);
+                                                            setEditingHealth(healthRecord);
+                                                        }}
                                                     >
                                                         Edit
                                                     </IonButton>
@@ -343,13 +347,21 @@ const HealthMonitoring: React.FC<HealthMonitoringProps> = ({ searchQuery = '' })
 
                 <AddHealthRecord 
                     isOpen={showAddModal}
-                    onClose={() => setShowAddModal(false)}
+                    onClose={() => {
+                        setShowAddModal(false);
+                        setIsEditing(false);
+                        setEditingHealth(null);
+                    }}
                     onSave={async (record: any) => {
                         await fetchHealthData();
                         setShowAddModal(false);
-                        setToastMessage('Health record saved successfully!');
+                        setIsEditing(false);
+                        setEditingHealth(null);
+                        setToastMessage(isEditing ? 'Health record updated successfully!' : 'Health record saved successfully!');
                         setShowToast(true);
                     }}
+                    isEditing={isEditing}
+                    editingHealth={editingHealth}
                 />
 
                 <ViewHealthModal

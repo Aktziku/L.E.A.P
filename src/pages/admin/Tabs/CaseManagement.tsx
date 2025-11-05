@@ -3,19 +3,26 @@ import React, { use } from 'react';
 import { supabase } from '../../../utils/supabaseClients';
 import { addOutline } from 'ionicons/icons';
 import AddCaseModal from '../../../components/AddCaseModal';
+import ViewCases from '../../../components/view/ViewCases';
 
 interface Case {
     caseid: number;
     profileid: number;
-    case_type: string;
-    case_created_by: string;
-    assigned_worker: string;
+    guid_received_from: string;
+    guidance_type: string;
+    guidance_frequency: string;
+    fam_sup_received_from : string;
+    family_support_type : string;
+    family_support_frequency : string;
+    received_GC : string;
+    received_FS : string;
     firstName?: string;
     lastName?: string;
 };
 
 interface CaseManagementProps {
     searchQuery?: string;
+    
 }
 
 const CaseManagement: React.FC<CaseManagementProps> = ({ searchQuery = '' }) => {
@@ -28,6 +35,8 @@ const CaseManagement: React.FC<CaseManagementProps> = ({ searchQuery = '' }) => 
     const [editingCase, setEditingCase] = React.useState<Case | null>();
     const [isEditing, setIsEditing] = React.useState(false);
     const [hasFetched, setHasFetched] = React.useState(false);
+    const [showViewModal, setShowViewModal] = React.useState(false);
+    const [viewingCaseId, setViewingCaseId] = React.useState<number | null>(null);
 
     useIonViewWillEnter(() => {
        // console.log("CaseManagement view entered");
@@ -43,8 +52,14 @@ const CaseManagement: React.FC<CaseManagementProps> = ({ searchQuery = '' }) => 
                 .select(`
                     caseid,
                     profileid,
-                    case_type,
-                    case_created_by,
+                    guid_received_from,
+                    guidance_type,
+                    guidance_frequency,
+                    fam_sup_received_from,
+                    family_support_type,
+                    family_support_frequency,
+                    received_GC,
+                    received_FS,
                     profile:profileid (
                         firstName,
                         lastName
@@ -79,6 +94,11 @@ const CaseManagement: React.FC<CaseManagementProps> = ({ searchQuery = '' }) => 
         const fullName = `${record.firstName} ${record.lastName}`.toLowerCase();
         return fullName.includes(searchQuery.toLowerCase());
     });
+
+    const handleViewProfile = (caseId: number) => {
+        setViewingCaseId(caseId);
+        setShowViewModal(true);
+    };
 
     {/* rendering based on loading state */}
     if (loading) {
@@ -163,7 +183,8 @@ const CaseManagement: React.FC<CaseManagementProps> = ({ searchQuery = '' }) => 
                                         }}
                                     >
                                         <IonCol size="12" sizeMd="5">Name</IonCol>
-                                        <IonCol size="12" sizeMd="4" className="ion-hide-md-down">Case Type</IonCol>
+                                        <IonCol size="6" sizeMd="2" className="ion-hide-md-down" >Guidance Counseling</IonCol>
+                                        <IonCol size="6" sizeMd="2" className="ion-hide-md-down">Family Support</IonCol>
                                         <IonCol size="12" sizeMd="3">Action</IonCol>
                                     </IonRow>
 
@@ -192,13 +213,17 @@ const CaseManagement: React.FC<CaseManagementProps> = ({ searchQuery = '' }) => 
                                                     </pre>
                                                     {/* Mobile-only info */}
                                                     <div className="ion-hide-md-up" style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                                                        <div><strong>Case Type:</strong> {caseItem.case_type || 'N/A'}</div>
+                                                        <div><strong>Guidance Counseling:</strong> {caseItem.received_GC || 'N/A'}</div><div><strong>Family Support:</strong> {caseItem.received_FS || 'N/A'}</div>
                                                     </div>
                                                 </IonCol>
                                                 
                                                 {/* Desktop-only column */}
-                                                <IonCol size="12" sizeMd="4" className="ion-hide-md-down">
-                                                    {caseItem.case_type || "N/A"}
+                                                <IonCol size="6" sizeMd="2" className="ion-hide-md-down">
+                                                    {caseItem.received_GC || "N/A"}
+                                                </IonCol>
+
+                                                <IonCol size="6" sizeMd="2" className="ion-hide-md-down">
+                                                    {caseItem.received_FS || "N/A"}
                                                 </IonCol>
 
                                                 <IonCol size="12" sizeMd="3">
@@ -210,6 +235,7 @@ const CaseManagement: React.FC<CaseManagementProps> = ({ searchQuery = '' }) => 
                                                             color: "#000",
                                                             marginRight: "5px",
                                                         }}
+                                                        onClick={() => handleViewProfile(caseItem.caseid)}
                                                     >
                                                         View
                                                     </IonButton>
@@ -246,13 +272,30 @@ const CaseManagement: React.FC<CaseManagementProps> = ({ searchQuery = '' }) => 
                
                 <AddCaseModal
                     isOpen={showAddModal}
-                    onClose={() => setShowAddModal(false)}
+                    onClose={() => {
+                        setShowAddModal(false);
+                        setIsEditing(false);
+                        setEditingCase(null);
+                    }}
                     onSave={async (record:any) => {
                         await fetchCases();
                         setShowAddModal(false);
+                        setIsEditing(false);
+                        setEditingCase(null);
                         setToastMessage(isEditing ? 'Case updated successfully!' : 'Case added successfully!');
                         setShowToast(true);
                     }}
+                    editingCase={editingCase}
+                    isEditing={isEditing}
+                />
+
+                <ViewCases
+                    isOpen={showViewModal}
+                    onClose={() => {
+                        setShowViewModal(false);
+                        setViewingCaseId(null);
+                    }}
+                    caseId={viewingCaseId}
                 />
             </IonContent>
         </IonPage>

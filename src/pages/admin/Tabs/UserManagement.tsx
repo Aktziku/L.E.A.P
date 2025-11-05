@@ -14,6 +14,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ searchQuery = '' }) => 
     const [showAddModal, setShowAddModal] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [showToast, setShowToast] = useState(false);
+    const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
     
     useIonViewWillEnter(() => {
         //console.log("UserManagement view entered");
@@ -24,7 +25,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ searchQuery = '' }) => 
         try {
             const { data, error } = await supabase
                 .from('users')
-                .select('*');
+                .select('*')
+                .order('userid', { ascending: true });
 
             if (error) {
                 setError(error.message);
@@ -45,9 +47,53 @@ const UserManagement: React.FC<UserManagementProps> = ({ searchQuery = '' }) => 
         }
     };
 
+    const handleToggleActive = async (userId: number, currentStatus: boolean) => {
+        try {
+            setUpdatingUserId(userId);
+            
+            console.log('Attempting to update user:', userId);
+            console.log('Current status:', currentStatus);
+            console.log('New status will be:', !currentStatus);
+            
+            const { data, error } = await supabase
+                .from('users')
+                .update({ active: !currentStatus })
+                .eq('userid', userId)
+                .select();
+
+            console.log('Update response - data:', data);
+            console.log('Update response - error:', error);
+
+            if (error) {
+                console.error('Supabase error details:', error);
+                throw error;
+            }
+
+            if (!data || data.length === 0) {
+                throw new Error('No rows were updated. User may not exist or you may not have permission.');
+            }
+
+            // Update local state
+            setUsers(users.map(user => 
+                user.userid === userId 
+                    ? { ...user, active: !currentStatus }
+                    : user
+            ));
+
+            setToastMessage(`User ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+            setShowToast(true);
+        } catch (error: any) {
+            console.error('Error updating user status:', error);
+            setToastMessage('Failed to update user status: ' + (error.message || 'Unknown error'));
+            setShowToast(true);
+        } finally {
+            setUpdatingUserId(null);
+        }
+    };
+
     const filteredUsers = users.filter(user => {
         if (!searchQuery) return true;
-        const fullName = `${user.firstname || ''} ${user.lastname || ''}`.toLowerCase();
+        const fullName = `${user.userfirstName || ''} ${user.userlastName || ''}`.toLowerCase();
         const email = (user.email || '').toLowerCase();
         const username = (user.username || '').toLowerCase();
         return fullName.includes(searchQuery.toLowerCase()) ||
@@ -58,65 +104,89 @@ const UserManagement: React.FC<UserManagementProps> = ({ searchQuery = '' }) => 
     {/* rendering based on loading state */}
     if (loading) {
         return (
-                <IonPage>
-                    <IonContent style={{ '--background': '#ffffffff' }}>
-                        <div className="ion-padding">
-                            <div className="ion-margin-bottom ion-margin-top">
+            <IonPage>
+                <IonContent style={{ '--background': '#ffffffff' }}>
+                    <IonGrid className="ion-padding">
+                        <IonRow className="ion-margin-bottom ion-margin-top">
+                            <IonCol size="12" sizeMd="6" sizeLg="4">
                                 <IonSkeletonText animated style={{ width: '150px', height: '44px', borderRadius: '12px' }} />
-                            </div>
+                            </IonCol>
+                        </IonRow>
 
-                            <IonCard style={{ border: "1px solid #000" }}>
-                                <IonCardContent>
-                                    <IonGrid style={{ "--ion-grid-column-padding": "8px" }}>
-                                        {/* Header Skeleton */}
-                                        <IonRow style={{ borderBottom: "1px solid #000", paddingBottom: '10px', marginBottom: '10px' }}>
-                                            <IonCol size="4"><IonSkeletonText animated style={{ width: '60%', height: '16px' }} /></IonCol>
-                                            <IonCol size="4"><IonSkeletonText animated style={{ width: '70%', height: '16px' }} /></IonCol>
-                                            <IonCol size="4"><IonSkeletonText animated style={{ width: '50%', height: '16px' }} /></IonCol>
+                        <IonCard style={{ border: "1px solid #000" }}>
+                            <IonCardContent>
+                                <IonGrid style={{ "--ion-grid-column-padding": "8px" }}>
+                                    {/* Header Skeleton */}
+                                    <IonRow style={{ borderBottom: "1px solid #000", paddingBottom: '10px' }}>
+                                        <IonCol size="12" sizeMd="4">
+                                            <IonSkeletonText animated style={{ width: '60%', height: '16px' }} />
+                                        </IonCol>
+                                        <IonCol size="12" sizeMd="3">
+                                            <IonSkeletonText animated style={{ width: '50%', height: '16px' }} />
+                                        </IonCol>
+                                        <IonCol size="12" sizeMd="2">
+                                            <IonSkeletonText animated style={{ width: '60%', height: '16px' }} />
+                                        </IonCol>
+                                        <IonCol size="12" sizeMd="3">
+                                            <IonSkeletonText animated style={{ width: '50%', height: '16px' }} />
+                                        </IonCol>
+                                    </IonRow>
+
+                                    {/* Row Skeletons */}
+                                    {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+                                        <IonRow
+                                            key={item}
+                                            style={{
+                                                borderBottom: item < 8 ? "1px solid #ccc" : "none",
+                                                padding: '15px 0'
+                                            }}
+                                        >
+                                            <IonCol size="12" sizeMd="4">
+                                                <IonSkeletonText animated style={{ width: '75%', height: '14px', margin: '0 auto' }} />
+                                            </IonCol>
+                                            <IonCol size="12" sizeMd="3">
+                                                <IonSkeletonText animated style={{ width: '60%', height: '14px', margin: '0 auto' }} />
+                                            </IonCol>
+                                            <IonCol size="12" sizeMd="2">
+                                                <IonSkeletonText animated style={{ width: '70px', height: '24px', borderRadius: '12px', margin: '0 auto' }} />
+                                            </IonCol>
+                                            <IonCol size="12" sizeMd="3">
+                                                <IonSkeletonText animated style={{ width: '100px', height: '32px', borderRadius: '8px', margin: '0 auto' }} />
+                                            </IonCol>
                                         </IonRow>
-
-                                        {/* Row Skeletons */}
-                                        {[1, 2, 3, 4, 5, 6].map((item) => (
-                                            <IonRow key={item} style={{ borderBottom: item < 6 ? "1px solid #ccc" : "none", padding: '12px 0' }}>
-                                                <IonCol size="4"><IonSkeletonText animated style={{ width: '75%', height: '14px' }} /></IonCol>
-                                                <IonCol size="4"><IonSkeletonText animated style={{ width: '60%', height: '14px' }} /></IonCol>
-                                                <IonCol size="4"><IonSkeletonText animated style={{ width: '50%', height: '14px' }} /></IonCol>
-                                            </IonRow>
-                                        ))}
-                                    </IonGrid>
-                                </IonCardContent>
-                            </IonCard>
-                        </div>
-                    </IonContent>
-                </IonPage>
+                                    ))}
+                                </IonGrid>
+                            </IonCardContent>
+                        </IonCard>
+                    </IonGrid>
+                </IonContent>
+            </IonPage>
         ); 
     }
 
     return (
         <IonPage>
             <IonContent style={{ '--background': '#ffffffff' }}>
-                <div className="ion-padding">
-                    <div className="ion-margin-bottom ion-margin-top">
-
-                            {/*Button for adding profiles */}
-                        <IonButton
-                            className="ion-margin-end"
-                            onClick={() => {
-                                //console.log("Opening Add User Modal");
-                                setShowAddModal(true);
-                                //setIsEditing(false);
-                                //setEditingProfile(null);
-                            }}
-                            style={{
-                                '--background': '#002d54',
-                                color: 'white',
-                                borderRadius: '12px',
-                            }}
-                        >
-                            <IonIcon icon={addOutline} slot="start" />
-                            Add User
-                        </IonButton>
-                    </div>
+                <IonGrid className="ion-padding">
+                    <IonRow className="ion-margin-bottom ion-margin-top">
+                        <IonCol size="12" sizeMd="6" sizeLg="4">
+                            {/*Button for adding users */}
+                            <IonButton
+                                className="ion-margin-end"
+                                onClick={() => {
+                                    setShowAddModal(true);
+                                }}
+                                style={{
+                                    '--background': '#002d54',
+                                    color: 'white',
+                                    borderRadius: '12px',
+                                }}
+                            >
+                                <IonIcon icon={addOutline} slot="start" />
+                                Add User
+                            </IonButton>
+                        </IonCol>
+                    </IonRow>
 
                     {error && (
                         <div className="ion-margin-bottom ion-color-danger">
@@ -127,21 +197,23 @@ const UserManagement: React.FC<UserManagementProps> = ({ searchQuery = '' }) => 
                     <IonGrid>
                         <IonCard style={{ border: "1px solid #000",'--background':'#ffffffff' }}>
                             <IonCardContent >
-                                <IonGrid>
-
+                                <IonGrid style={{ "--ion-grid-column-padding": "8px" }}>
                                     {/* Table Header */}
                                     <IonRow
                                         style={{
                                         borderBottom: "1px solid #000",
                                         fontWeight: "bold",
                                         color: "#000",
+                                        textAlign: "center",
                                         }}
                                     >
-                                        <IonCol>User Name</IonCol>
-                                        <IonCol>Role</IonCol>
-                                        <IonCol size="3">Action</IonCol>
+                                        <IonCol size="12" sizeMd="4">User Name</IonCol>
+                                        <IonCol size="12" sizeMd="3">Role</IonCol>
+                                        <IonCol size="12" sizeMd="2">Status</IonCol>
+                                        <IonCol size="12" sizeMd="3">Action</IonCol>
                                     </IonRow>
                                     
+                                    {/* Table Data */}
                                     {filteredUsers.length === 0 ? (
                                         <IonRow>
                                             <IonCol style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
@@ -153,37 +225,62 @@ const UserManagement: React.FC<UserManagementProps> = ({ searchQuery = '' }) => 
                                         <IonRow
                                             key={index}
                                             style={{
-                                            borderBottom: "1px solid #000",
-                                            color: "#000",
+                                                borderBottom: index < filteredUsers.length - 1 ? "1px solid #ccc" : "none",
+                                                color: "#000",
+                                                textAlign: "center"
                                             }}
+                                            className="ion-align-items-center"
                                         >
-                                            <IonCol>{user.username}</IonCol>
-                                            <IonCol>{user.role}</IonCol>
-                                            <IonCol size="3">
+                                            <IonCol size="12" sizeMd="4">
+                                                {user.username}
+                                                <pre style={{ fontSize: '10px', color: 'black', margin: '2px 0' }}>
+                                                    ID: {user.userid}
+                                                </pre>
+                                            </IonCol>
+                                            <IonCol size="12" sizeMd="3">{user.role}</IonCol>
+                                            <IonCol size="12" sizeMd="2">
+                                                <span style={{
+                                                    padding: '4px 12px',
+                                                    borderRadius: '12px',
+                                                    fontSize: '12px',
+                                                    fontWeight: 'bold',
+                                                    backgroundColor: user.active ? '#d4edda' : '#f8d7da',
+                                                    color: user.active ? '#155724' : '#721c24'
+                                                }}>
+                                                    {user.active ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </IonCol>
+                                            <IonCol size="12" sizeMd="3">
                                                 <IonButton
                                                     size="small"
-                                                        fill="outline"
-                                                        color="black"
-                                                        style={{
-                                                            
-                                                            color: "#000",
-                                                            marginRight: "5px",
-                                                        }}
-                                                    
+                                                    fill="outline"
+                                                    style={{ marginRight: "5px",}}
                                                 >
                                                     Edit
                                                 </IonButton>
                                                 
-                                                </IonCol>
+                                                <IonButton
+                                                    size="small"
+                                                    fill="solid"
+                                                    color={user.active ? 'danger' : 'success'}
+                                                    onClick={() => handleToggleActive(user.userid, user.active)}
+                                                    disabled={updatingUserId === user.userid}
+                                                >
+                                                    {updatingUserId === user.userid ? (
+                                                        <IonSpinner name="crescent" style={{ width: '16px', height: '16px' }} />
+                                                    ) : (
+                                                        user.active ? 'Deactivate' : 'Activate'
+                                                    )}
+                                                </IonButton>
+                                            </IonCol>
                                         </IonRow>
-
                                     ))
                                     )}
                                 </IonGrid>
                             </IonCardContent>
                         </IonCard>
                     </IonGrid>
-                </div>
+                </IonGrid>
 
                 <IonToast
                     isOpen = {showToast}
@@ -202,7 +299,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ searchQuery = '' }) => 
                         setToastMessage('User added successfully');
                         setShowToast(true);
                     }}
-                    />
+                />
             </IonContent>
         </IonPage>
     );

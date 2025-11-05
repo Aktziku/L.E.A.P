@@ -172,14 +172,14 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSave }) 
                                 <IonRow className="ion-justify-content-center ion-margin-top">
                                     <IonCol size="auto">
                                     <IonButton 
-                                        onClick={handleSave}
+                                        onClick = {handleSave}
+                                        disabled = {loading}
                                         style={{
                                             '--background': '#002d54',
                                             color: 'white',
-                                            disabled: {loading}
                                         }}
                                     >
-                                        {loading ? 'Save' : 'Saving...'}
+                                        {loading ? 'Saving...' : 'Save'}
                                     </IonButton>
                                     </IonCol>
                                     <IonCol size="auto">

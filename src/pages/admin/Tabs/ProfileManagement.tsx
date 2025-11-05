@@ -185,7 +185,7 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({ searchQuery = '' 
                     {earlyWarnings.size > 0 && (
                         <IonRow className="ion-margin-bottom">
                             <IonCol size="12">
-                                <IonCard style={{ borderLeft: '4px solid #e74c3c', '--background': '#fee' }}>
+                                <IonCard style={{ borderLeft: '4px solid #e74c3c', '--background': '#fee', alignItems: 'center', }}>
                                     <IonCardContent>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                             <IonIcon icon={warningOutline} style={{ fontSize: '24px', color: '#e74c3c' }} />
@@ -320,9 +320,14 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({ searchQuery = '' 
                                                     <IonButton
                                                     size="small"
                                                     fill="outline"
-                                                style={{ marginRight: "5px" }}
+                                                    style={{ marginRight: "5px" }}
+                                                    onClick={() => {
+                                                        setIsEditing(true);
+                                                        setEditingProfile(profile);
+                                                        setShowAddModal(true);
+                                                    }}
                                                     >
-                                                    Edit
+                                                        Edit
                                                     </IonButton>
                                                 </IonCol>
                                                 </IonRow>
@@ -344,16 +349,23 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({ searchQuery = '' 
                 />
 
                 <AddProfileModal 
-                    isOpen = {showAddModal}
-                    onClose = {() => setShowAddModal(false)}
-                    onSave = {async (profileData) => {
-                      console.log("Saved profile:", profileData);
-                      await fetchProfiles();
-                      setToastMessage('Profile added successfully!');
-                      setShowToast(true);
+                    isOpen={showAddModal}
+                    onClose={() => {
+                        setShowAddModal(false);
+                        setIsEditing(false);
+                        setEditingProfile(null);
                     }}
+                    onSave={async (profileData) => {
+                        console.log("Saved profile:", profileData);
+                        await loadData(); 
+                        setToastMessage(isEditing ? 'Profile updated successfully!' : 'Profile added successfully!');
+                        setShowToast(true);
+                        setIsEditing(false);
+                        setEditingProfile(null);
+                    }}
+                    editingProfile={editingProfile}
+                    isEditing={isEditing}
                 />
-
                 <ViewProfileModal
                     isOpen={showViewModal}
                     onClose={() => {

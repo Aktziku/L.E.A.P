@@ -220,15 +220,6 @@ const Reports: React.FC = () => {
           </div>
         )}
 
-        {/* Early Warning Dashboard */}
-        <EarlyWarningDashboard
-          earlyWarnings={earlyWarnings}
-          warningStats={warningStats}
-          loading={loading}
-          reportType={reportType}
-          onGenerateReport={() => handleGenerateReport('warnings')}
-        />
-
         {/* Location Filter Card */}
         <LocationFilterCard
           locationFilter={locationFilter}
@@ -239,6 +230,17 @@ const Reports: React.FC = () => {
           getLocationFilterText={() => getLocationFilterText(locationFilter)}
          
         />
+        
+        {/* Early Warning Dashboard */}
+        <EarlyWarningDashboard
+          earlyWarnings={earlyWarnings}
+          warningStats={warningStats}
+          loading={loading}
+          reportType={reportType}
+          onGenerateReport={() => handleGenerateReport('warnings')}
+        />
+
+        
 
         <h2 style={{ fontSize: '20px', marginBottom: '15px' }}>Statistics Overview</h2>
 

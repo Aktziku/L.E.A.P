@@ -1,5 +1,5 @@
 import { IonButton, IonCard, IonCardContent, IonCol, IonContent, IonHeader, IonInput, IonItem, IonLabel, IonList, IonModal, IonPage, IonRow, IonSelect, IonSelectOption, IonSpinner, IonText, IonTitle, IonToolbar } from '@ionic/react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../utils/supabaseClients';
 import { search } from 'ionicons/icons';
 
@@ -7,6 +7,8 @@ interface EducationRecordProps {
     isOpen: boolean;
     onClose:() => void;
     onSave: (record:any) => Promise<void>;
+    editingEducation?: any | null;
+    isEditing?: boolean;
 }
 
 interface ProfileOption {
@@ -24,7 +26,6 @@ interface formState {
     institutionOrCenter: string;
     enroll_dropout_Date: string;
     gradeLevel: string;
-
 }
 
 const emptyForm: formState = {
@@ -36,19 +37,25 @@ const emptyForm: formState = {
     institutionOrCenter: '',
     enroll_dropout_Date: '',
     gradeLevel: '',
-
 };
 
-const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose, onSave, }) => {
+const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ 
+    isOpen, 
+    onClose, 
+    onSave, 
+    editingEducation = null,
+    isEditing = false 
+}) => {
     const [profiles, setProfiles] = useState<ProfileOption[]>([]);
     const [loading, setLoading] = useState(false);
     const [save, setSave] = useState(false);
     const [prefillLoading, setPrefillLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [form, setForm] = useState<formState>(emptyForm);
-    const [isEditing, setIsEditing] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [filteredProfiles, setFilteredProfiles] = useState<ProfileOption[]>([]);
+    const isLoadingEditData = useRef(false);
+    const previousTypeOfProgram = useRef<string>('');
 
     const gradeLevelOptions: Record<string, string[]> = {
         'elementary': ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'],
@@ -66,17 +73,78 @@ const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose,
         if (!isOpen) {
             return;
         }
-        setForm(emptyForm);
+        
+        if (isEditing && editingEducation) {
+            // Load editing data
+            loadEditingData();
+        } else {
+            // Reset form for new record
+            setForm(emptyForm);
+            previousTypeOfProgram.current = '';
+        }
+        
         setError(null);
         void loadProfiles();
-    }, [isOpen]);
+    }, [isOpen, isEditing, editingEducation]);
 
     useEffect(() => {
-        setForm((prevForm) => ({
-            ...prevForm,
-            gradeLevel: '',
-        }));
+        if (!isLoadingEditData.current && 
+            previousTypeOfProgram.current !== '' && 
+            previousTypeOfProgram.current !== form.typeOfProgram) {
+            setForm((prevForm) => ({
+                ...prevForm,
+                gradeLevel: '',
+            }));
+        }
+        previousTypeOfProgram.current = form.typeOfProgram;
     }, [form.typeOfProgram]);
+
+    const loadEditingData = async () => {
+        if (!editingEducation) return;
+        
+        isLoadingEditData.current = true;
+        setPrefillLoading(true);
+        try {
+            // Load profile data for the search field
+            const { data: profileData, error: profileError } = await supabase
+                .from('profile')
+                .select('profileid, firstName, lastName')
+                .eq('profileid', editingEducation.profileid)
+                .single();
+
+            if (profileError) throw profileError;
+
+            const profileSearchText = profileData 
+                ? `${profileData.lastName ?? ''}, ${profileData.firstName ?? ''} (ID: ${profileData.profileid})`
+                : '';
+
+            // IMPORTANT: Set the previous type BEFORE setting the form
+            previousTypeOfProgram.current = editingEducation.typeOfProgram || '';
+            
+           
+
+            isLoadingEditData.current = false;
+            // Set form with editing data
+            setForm({
+                profileid: editingEducation.profileid,
+                profileSearch: profileSearchText,
+                typeOfProgram: editingEducation.typeOfProgram || '',
+                programCourse: editingEducation.programCourse || '',
+                status: editingEducation.status || '',
+                institutionOrCenter: editingEducation.institutionOrCenter || '',
+                enroll_dropout_Date: editingEducation.enroll_dropout_Date || '',
+                gradeLevel: editingEducation.gradeLevel || '',
+            });
+            
+            // Reset the flag after data is loaded with longer timeout
+        } catch (err) {
+            console.error('Error loading editing data:', err);
+            setError('Failed to load education record data');
+            isLoadingEditData.current = false;
+        } finally {
+            setPrefillLoading(false);
+        }
+    };
 
     const handleProfileSearch = (searchValue: string) => {
         setForm((prevForm) => ({
@@ -126,7 +194,6 @@ const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose,
     };
 
     const handleProfileSelect = async (profile: ProfileOption) => {
-        
         setError(null);
 
         setForm((prevForm) => ({
@@ -135,7 +202,6 @@ const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose,
             profileSearch: `${profile.lastName ?? ''}, ${profile.firstName ?? ''} (ID: ${profile.profileid})`,
         }));
         setShowSuggestions(false);
-            
     };
 
     const handleChange = <K extends keyof formState>(key: K, value: formState[K]) => {
@@ -153,48 +219,101 @@ const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose,
         }
         setSave(true);
         setError(null);
-    
-        const currentYear = new Date().getFullYear();
-        const yearPrefix = parseInt( currentYear.toString());
 
-        const {count, error: countError} = await supabase
-            .from('EducationAndTraining')
-            .select('*', {count: 'exact', head: true})
-            .gte('educationid', yearPrefix * 10000)
-            .lt('educationid', (yearPrefix + 1) * 10000);
-            
+        try {
+            if (isEditing && editingEducation) {
+                // Update existing record
+                const payload = {
+                    profileid: form.profileid,
+                    typeOfProgram: form.typeOfProgram || null,
+                    programCourse: form.programCourse || null,
+                    status: form.status || null,
+                    institutionOrCenter: form.institutionOrCenter || null,
+                    enroll_dropout_Date: form.enroll_dropout_Date || null,
+                    gradeLevel: form.gradeLevel || null,
+                };
 
-        if (countError) {
-            setError(`Error generating Education ID: ${countError.message}`);
+                console.log('Updating education record with payload:', payload);
+                console.log('Education ID:', editingEducation.educationid);
+
+                // First, verify the record exists
+                const { data: beforeData, error: beforeError } = await supabase
+                    .from('EducationAndTraining')
+                    .select('*')
+                    .eq('educationid', editingEducation.educationid)
+                    .single();
+
+                console.log('Before update:', { beforeData, beforeError });
+
+                // Perform the update
+                const { data, error, count, status, statusText } = await supabase
+                    .from('EducationAndTraining')
+                    .update(payload)
+                    .eq('educationid', editingEducation.educationid);
+
+                console.log('Update response:', { data, error, count, status, statusText });
+
+                // Verify the update
+                const { data: afterData, error: afterError } = await supabase
+                    .from('EducationAndTraining')
+                    .select('*')
+                    .eq('educationid', editingEducation.educationid)
+                    .single();
+
+                console.log('After update:', { afterData, afterError });
+
+                if (error) {
+                    console.error('Update error:', error);
+                    throw error;
+                }
+
+                await onSave({ ...payload, educationid: editingEducation.educationid });
+                setForm(emptyForm);
+            } else {
+                // Create new record
+                const currentYear = new Date().getFullYear();
+                const yearPrefix = parseInt(currentYear.toString());
+
+                const {count, error: countError} = await supabase
+                    .from('EducationAndTraining')
+                    .select('*', {count: 'exact', head: true})
+                    .gte('educationid', yearPrefix * 10000)
+                    .lt('educationid', (yearPrefix + 1) * 10000);
+
+                if (countError) {
+                    setError(`Error generating Education ID: ${countError.message}`);
+                    setSave(false);
+                    return;
+                }
+
+                const newEducationId = yearPrefix * 10000 + ((count ?? 0) + 1);
+
+                const payload = {
+                    educationid: newEducationId,
+                    profileid: form.profileid,
+                    typeOfProgram: form.typeOfProgram || null,
+                    programCourse: form.programCourse || null,
+                    status: form.status || null,
+                    institutionOrCenter: form.institutionOrCenter || null,
+                    enroll_dropout_Date: form.enroll_dropout_Date || null,
+                    gradeLevel: form.gradeLevel || null,
+                };
+
+                const {data, error} = await supabase
+                    .from('EducationAndTraining')
+                    .insert(payload);
+
+                if (error) throw error;
+
+                await onSave(payload);
+                setForm(emptyForm);
+            }
+        } catch (error: any) {
+            console.error('Save error:', error);
+            setError(error.message || 'An error occurred while saving');
+        } finally {
             setSave(false);
-            return;
         }
-
-        const newEducationId = yearPrefix * 10000 + ((count ?? 0) + 1);
-
-        const payload = {
-            educationid: newEducationId,
-            profileid: form.profileid,
-            typeOfProgram: form.typeOfProgram || null,
-            programCourse: form.programCourse || null,
-            status: form.status || null,
-            institutionOrCenter: form.institutionOrCenter || null,
-            enroll_dropout_Date: form.enroll_dropout_Date || null,
-            gradeLevel: form.gradeLevel || null,
-
-        };
-
-        const {error} = await supabase
-            .from('EducationAndTraining')
-            .insert(payload);
-
-        if (error) {
-            setError(error.message);
-        } else {
-            await onSave(payload);
-            setForm(emptyForm);
-        }
-        setSave(false);
     };
 
     const showEmptyProfilesMessage = useMemo(
@@ -232,8 +351,7 @@ const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose,
                         }}
                     >
                         Close
-                        </IonButton>
-
+                    </IonButton>
                 </IonToolbar>
             </IonHeader>
 
@@ -281,8 +399,6 @@ const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose,
                                         maxHeight: '200px',
                                         overflowY: 'auto',
                                         marginTop: '-10px',
-                                        
-                                        
                                     }}>
                                         {filteredProfiles.map((profile) => (
                                             <div
@@ -322,9 +438,9 @@ const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose,
                                         <IonSelectOption value="ALS Secondary">ALS Secondary</IonSelectOption>
                                         <IonSelectOption value="TESDA">TESDA</IonSelectOption>
                                     </IonSelect>
-                                    </IonItem>
+                                </IonItem>
 
-                                    {/* School Grade*/}
+                                {/* School Grade*/}
                                 <IonItem  style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent', }}>
                                     <IonLabel position="stacked" style={{ '--color': '#000000' }}>Grade Level</IonLabel>
                                     <IonSelect
@@ -403,10 +519,26 @@ const AddEnrollRecordModal: React.FC<EducationRecordProps> = ({ isOpen, onClose,
                                     style={{ '--background': '#002d54', color: '#fff' }}
                                     disabled={save || loading || showEmptyProfilesMessage || prefillLoading}
                                 >
-                                    {save ? <IonSpinner name="lines-small" /> : 'Save'}
+                                    {save ? <IonSpinner name="lines-small" /> : (isEditing ? 'Update' : 'Save')}
                                 </IonButton>
                                 </IonCol>
+
+                                <IonCol size="auto">
+                                    <IonButton color="medium" fill="outline" onClick={onClose} disabled={loading}>
+                                        Cancel
+                                    </IonButton>
+                                </IonCol>
                             </IonRow>
+
+                            {error && (
+                                <IonRow>
+                                <IonCol>
+                                    <div style={{ color: 'red', textAlign: 'center', marginTop: '10px' }}>
+                                    {error}
+                                    </div>
+                                </IonCol>
+                                </IonRow>
+                            )}
                         </IonCardContent>
                     </IonCard>
             )}

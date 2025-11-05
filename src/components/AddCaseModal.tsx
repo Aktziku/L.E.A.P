@@ -1,6 +1,6 @@
 import { IonButton, IonCard, IonCardContent, IonCol, IonContent, IonHeader, IonInput, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonModal, IonPage, IonRadio, IonRadioGroup, IonRow, IonSelect, IonSelectOption, IonSpinner, IonText, IonTitle, IonToolbar } from '@ionic/react';
 import { filter, save } from 'ionicons/icons';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../utils/supabaseClients';
 import CaseManagement from '../pages/admin/Tabs/CaseManagement';
 
@@ -8,6 +8,8 @@ interface AddCaseModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (caseData: any) => Promise<void>;
+    editingCase?: any | null;
+    isEditing?: boolean;
 }
 
 interface ProfileOption {
@@ -45,9 +47,15 @@ const emptyForm: FormState= {
     received_GC: '',
     received_FS: '',
 }
-const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) => {
+const AddCaseModal: React.FC<AddCaseModalProps> = ({ 
+    isOpen, 
+    onClose, 
+    onSave, 
+    editingCase = null,
+    isEditing = false 
+}) => {
 
-        const [isEditing, setIsEditing] = useState(false);
+        
         const [loading, setLoading] = useState(false);
         const [error, setError] = useState<string | null>(null);
         const [form, setForm] = useState<FormState>(emptyForm);
@@ -57,16 +65,72 @@ const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) 
         const [filterProfile, setFilterProfile] = useState<ProfileOption[]>([]);
         const [showSuggestions, setShowSuggestions] = useState(false);
         const [currentUserName, setCurrentUserName] = useState<string>('');
+        const [prefillLoading, setPrefillLoading] = useState(false);
+        const isLoadingEditData = useRef(false);
 
-        useEffect(() =>{
+       useEffect(() =>{
             if (!isOpen) {
                 return;
             }
-            setForm(emptyForm);
+            
+            if (isEditing && editingCase) {
+                // Load editing data
+                loadEditingData();
+            } else {
+                // Reset form for new record
+                setForm(emptyForm);
+                void loadCurrentUser();
+            }
+            
             setError(null);
             void loadProfiles();
-            void loadCurrentUser();
-        }, [isOpen]);
+        }, [isOpen, isEditing, editingCase]);
+
+        const loadEditingData = async () => {
+            if (!editingCase) return;
+            
+            isLoadingEditData.current = true;
+            setPrefillLoading(true);
+            try {
+                // Load profile data for the search field
+                const { data: profileData, error: profileError } = await supabase
+                    .from('profile')
+                    .select('profileid, firstName, lastName')
+                    .eq('profileid', editingCase.profileid)
+                    .single();
+
+                if (profileError) throw profileError;
+
+                const profileSearchText = profileData 
+                    ? `${profileData.lastName ?? ''}, ${profileData.firstName ?? ''} (ID: ${profileData.profileid})`
+                    : '';
+
+                isLoadingEditData.current = false;
+                
+                // Set form with editing data
+                setForm({
+                    profileid: editingCase.profileid,
+                    profileSearch: profileSearchText,
+                    case_type: editingCase.case_type || '',
+                    case_created_by: editingCase.case_created_by || '',
+                    guid_received_from: editingCase.guid_received_from || '',
+                    guidance_type: editingCase.guidance_type || '',
+                    guidance_frequency: editingCase.guidance_frequency || '',
+                    fam_sup_received_from: editingCase.fam_sup_received_from || '',
+                    family_support_type: editingCase.family_support_type || '',
+                    family_support_frequency: editingCase.family_support_frequency || '',
+                    received_GC: editingCase.received_GC || '',
+                    received_FS: editingCase.received_FS || '',
+                });
+                
+            } catch (err) {
+                console.error('Error loading editing data:', err);
+                setError('Failed to load case record data');
+                isLoadingEditData.current = false;
+            } finally {
+                setPrefillLoading(false);
+            }
+        };
 
         const loadCurrentUser = async () => {
             try {
@@ -97,6 +161,7 @@ const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) 
                 console.error('Error loading current user:', error);
             }
         };
+
         const handleProfileSearch = (searchValue: string) => {
             setForm((prevForm) => ({
                 ...prevForm,
@@ -138,6 +203,8 @@ const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) 
                 } else {
                     setError('An unexpected error occurred');
                 }
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -170,43 +237,77 @@ const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) 
         setSaved(true);
         setError(null);
 
-        const currentYear = new Date().getFullYear();
-        const yearPrefix = parseInt( currentYear.toString());
+        try {
+            if (isEditing && editingCase) {
+                // Update existing record
+                const payload = {
+                    profileid: form.profileid,
+                    case_type: form.case_type || null,
+                    case_created_by: form.case_created_by || null,
+                    guid_received_from: form.guid_received_from || null,
+                    guidance_type: form.guidance_type || null,
+                    guidance_frequency: form.guidance_frequency || null,
+                    fam_sup_received_from: form.fam_sup_received_from || null,
+                    family_support_type: form.family_support_type || null,
+                    family_support_frequency: form.family_support_frequency || null,
+                    received_GC: form.received_GC || null,
+                    received_FS: form.received_FS || null,
+                };
 
-        const randomSuffix = Math.floor(1000 + Math.random() * 9000); 
-        const newCaseId = parseInt(`${yearPrefix}${randomSuffix}`);
+                const { error } = await supabase
+                    .from('caseManagement')
+                    .update(payload)
+                    .eq('caseid', editingCase.caseid);
 
-        const payLoad = {
-            caseid: newCaseId,
-            profileid: form.profileid,
-            case_type: form.case_type || null,
-            case_created_by: form.case_created_by || null,
-            guid_received_from: form.guid_received_from || null,
-            guidance_type: form.guidance_type || null,
-            guidance_frequency: form.guidance_frequency || null,
-            fam_sup_received_from: form.fam_sup_received_from || null,
-            family_support_type: form.family_support_type || null,
-            family_support_frequency: form.family_support_frequency || null,
-            received_GC: form.received_GC || null,
-            received_FS: form.received_FS || null,
-        };
-        const { error } = await supabase
-            .from('caseManagement')
-            .insert(payLoad);
+                if (error) throw error;
 
-        if (error) {
-
-            if (error.code === '23505') {
-                setError('A case with this ID already exists. Please try again.');
+                await onSave({ ...payload, caseid: editingCase.caseid });
+                setForm(emptyForm);
+                onClose();
             } else {
-                setError(error.message);
+                // Create new record
+                const currentYear = new Date().getFullYear();
+                const yearPrefix = parseInt(currentYear.toString());
+
+                const randomSuffix = Math.floor(1000 + Math.random() * 9000); 
+                const newCaseId = parseInt(`${yearPrefix}${randomSuffix}`);
+
+                const payLoad = {
+                    caseid: newCaseId,
+                    profileid: form.profileid,
+                    case_type: form.case_type || null,
+                    case_created_by: form.case_created_by || null,
+                    guid_received_from: form.guid_received_from || null,
+                    guidance_type: form.guidance_type || null,
+                    guidance_frequency: form.guidance_frequency || null,
+                    fam_sup_received_from: form.fam_sup_received_from || null,
+                    family_support_type: form.family_support_type || null,
+                    family_support_frequency: form.family_support_frequency || null,
+                    received_GC: form.received_GC || null,
+                    received_FS: form.received_FS || null,
+                };
+
+                const { error } = await supabase
+                    .from('caseManagement')
+                    .insert(payLoad);
+
+                if (error) {
+                    if (error.code === '23505') {
+                        setError('A case with this ID already exists. Please try again.');
+                    } else {
+                        setError(error.message);
+                    }
+                } else {
+                    await onSave(payLoad);
+                    setForm(emptyForm);
+                    onClose();
+                }
             }
-        } else {
-            await onSave(payLoad);
-            setForm(emptyForm);
-            onClose();
+        } catch (error: any) {
+            setError(error.message || 'An error occurred while saving');
+        } finally {
+            setSaved(false);
         }
-        setSaved(false);
     };
 
     const showEmptyProfilesMessage = useMemo(
@@ -249,7 +350,7 @@ const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) 
                 </IonToolbar>
             </IonHeader>
             <IonContent style={{ '--background': '#ffffffff' }}>
-                {loading ? (
+                {loading || prefillLoading ? (
                     <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
                         <IonSpinner />
                     </div>
@@ -522,9 +623,9 @@ const AddCaseModal: React.FC<AddCaseModalProps> = ({ isOpen, onClose, onSave }) 
                                     expand="block"
                                     onClick={handleSave}
                                     style={{ '--background': '#002d54', color: '#fff' }}
-                                    disabled={saved || loading || showEmptyProfilesMessage || profileLoading}
+                                    disabled={saved || loading || showEmptyProfilesMessage || profileLoading || prefillLoading}
                                 >
-                                    {saved ? <IonSpinner name="lines-small" /> : 'Save'}
+                                    {saved ? <IonSpinner name="lines-small" /> : (isEditing ? 'Update' : 'Save')}
                                 </IonButton>
                             </IonCol>
                         </IonRow>

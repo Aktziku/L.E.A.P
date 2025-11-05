@@ -22,24 +22,23 @@ import {
     IonItemDivider,
     IonCheckbox,
     IonRadio,
-    IonRadioGroup
+    IonRadioGroup,
+    IonSpinner
 } from '@ionic/react';
 import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../utils/supabaseClients';
 import {saveCompleteProfile} from '../services/profileService';
 import { regions, provinces, city_mun, barangays } from 'phil-reg-prov-mun-brgy';
 
-
-
-
-
 interface AddProfileModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (profile: any) => Promise<void>;
+    editingProfile?: any;
+    isEditing?: boolean;
 }
 
-const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSave }) => {
+const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSave, editingProfile = null, isEditing: isEditingProp = false }) => {
    const [isEditing, setIsEditing] = useState(false);
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState<string | null>(null);
@@ -85,8 +84,215 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
     medical_history_others: '',
   });
 
+  useEffect(() => {
+       if (isOpen && editingProfile && isEditingProp) {
+           setIsEditing(true);
+           loadEditingData(editingProfile.profileid);
+       } else if (isOpen && !isEditingProp) {
+           setIsEditing(false);
+           resetForm();
+       }
+   }, [isOpen, editingProfile, isEditingProp]);
+
+   // Update the loadEditingData function (around line 82):
+  const loadEditingData = async (profileId: number) => {
+      try {
+          setLoading(true);
+          
+          // Fetch profile data
+          const { data: profile, error: profileError } = await supabase
+              .from('profile')
+              .select('*')
+              .eq('profileid', profileId)
+              .single();
+          
+          if (profileError) throw profileError;
+          
+          // Fetch partner data
+          const { data: partner, error: partnerError } = await supabase
+              .from('partnersInfo')
+              .select('*')
+              .eq('profileid', profileId)
+              .maybeSingle();
+          
+          // Fetch health data
+          const { data: health, error: healthError } = await supabase
+              .from('maternalhealthRecord')
+              .select('*')
+              .eq('profileid', profileId)
+              .maybeSingle();
+          
+          // Set profile data
+          if (profile) {
+              setProfileData({
+                  firstName: profile.firstName || '',
+                  lastName: profile.lastName || '',
+                  age: profile.age || 0,
+                  birthdate: profile.birthdate || '',
+                  contactnum: profile.contactnum || '',
+                  barangay: profile.barangay || '',
+                  municipality: profile.municipality || '',
+                  province: profile.province || '',
+                  region: profile.region || '',
+                  zipcode: profile.zipcode || '',
+                  marital_status: profile.marital_status || '',
+                  religion: profile.religion || '',
+                  living_with: profile.living_with || '',
+                  family_income: profile.family_income || '',
+                  current_year_level: profile.current_year_level || '',
+                  highest_educational_attainment: profile.highest_educational_attainment || '',
+                  fathers_occupation: profile.fathers_occupation || '',
+                  mothers_occupation: profile.mothers_occupation || '',
+                  indigenous_ethnicity: profile.indigenous_ethnicity || '',
+              });
+              
+              // Fix: Use 'Yes' and 'No' to match the radio group values
+              setIsIndigenous(profile.indigenous_ethnicity ? 'Yes' : 'No');
+
+              // Populate address dropdowns
+              if (profile.region) {
+                //console.log('Finding region:', profile.region);
+                const region = regions.find((r: any) => r.name === profile.region);
+                //console.log('Found region:', region);
+                
+                if (region) {
+                    const filteredProvinces = provinces.filter((prov: { reg_code: string }) => prov.reg_code === region.reg_code);
+                    
+                    setProvincelist(filteredProvinces);
+                    
+                    if (profile.province) {
+                        
+                        const province = filteredProvinces.find((p: any) => p.name === profile.province);
+                        console.log('Found province:', province);
+                        
+                        if (province) {
+                            const filteredMunicipalities = city_mun.filter((mun: { prov_code: string }) => mun.prov_code === province.prov_code);
+                           
+                            setMunicipalitylist(filteredMunicipalities);
+                            
+                            if (profile.municipality) {
+                                
+                                const municipality = filteredMunicipalities.find((m: any) => m.name === profile.municipality);
+                                console.log('Found municipality:', municipality);
+                                
+                                if (municipality) {
+                                    const filteredBarangays = barangays.filter((brgy: { mun_code: string }) => brgy.mun_code === municipality.mun_code);
+                                    
+                
+                                    // Try exact match first
+                                    let foundBarangay = filteredBarangays.find((b: any) => b.name === profile.barangay);
+                                    
+                                    // If not found, try case-insensitive match
+                                    if (!foundBarangay) {
+                                        
+                                        foundBarangay = filteredBarangays.find((b: any) => b.name.toLowerCase() === profile.barangay.toLowerCase());
+                                    }
+                                    
+                                    // If still not found, try trimmed match
+                                    if (!foundBarangay) {
+                                        
+                                        foundBarangay = filteredBarangays.find((b: any) => b.name.trim() === profile.barangay.trim());
+                                    }
+                                    
+                                   
+                                    
+                                    setBarangaylist(filteredBarangays);
+                                } else {
+                                    console.log('Municipality not found in filtered list');
+                                }
+                            }
+                        } else {
+                            console.log('Province not found in filtered list');
+                        }
+                    }
+                } else {
+                    console.log('Region not found in regions list');
+                }
+            }
+        }
+          
+          // Set partner data
+          if (partner) {
+              setPartnersData({
+                  pFirstname: partner.pFirstname || '',
+                  pLastname: partner.pLastname || '',
+                  pAge: partner.pAge || 0,
+                  pBirthdate: partner.pBirthdate || '',
+                  pOccupation: partner.pOccupation || '',
+                  pIncome: partner.pIncome || '',
+              });
+          }
+          
+          // Set health data
+          if (health) {
+              const medicalHistory = health.medical_history ? health.medical_history.split(',').map((item: string) => item.trim()) : [];
+              const typesOfSupport = health.types_of_support ? health.types_of_support.split(',').map((item: string) => item.trim()) : [];
+              
+              setHealthData({
+                  pregnancy_status: health.pregnancy_status || '',
+                  medical_history: medicalHistory.filter((item: string) => !item.startsWith(' ')),
+                  types_of_support: typesOfSupport,
+                  stage_of_pregnancy: health.stage_of_pregnancy || '',
+                  medical_history_others: medicalHistory.find((item: string) => item.startsWith(' '))?.trim() || '',
+              });
+          }
+      } catch (err: any) {
+          console.error('Error loading profile for editing:', err);
+          setError(err.message || 'Failed to load profile data');
+      } finally {
+          setLoading(false);
+      }
+  };
+
+   const resetForm = () => {
+       setProfileData({
+           firstName: '',
+           lastName: '',
+           age: 0,
+           birthdate: '',
+           contactnum: '',
+           barangay: '',
+           municipality: '',
+           province: '',
+           region: '',
+           zipcode: '',
+           marital_status: '',
+           religion: '',
+           living_with: '',
+           family_income: '',
+           current_year_level: '',
+           highest_educational_attainment: '',
+           fathers_occupation: '',
+           mothers_occupation: '',
+           indigenous_ethnicity: '',
+       });
+
+       setPartnersData({
+           pFirstname: '',
+           pLastname: '',
+           pAge: 0,
+           pBirthdate: '',
+           pOccupation: '',
+           pIncome: '',
+       });
+
+       setHealthData({
+           pregnancy_status: '',
+           medical_history: [],
+           types_of_support: [],
+           stage_of_pregnancy: '',
+           medical_history_others: '',
+       });
+       
+      setProvincelist([]);
+      setMunicipalitylist([]);
+      setBarangaylist([]);
+      setIsIndigenous('');
+      setError(null);
+   };
+   
   // Function to save profile data to Supabase
-  const saveProfileToSupabase = async () => {
+  const handleSave = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -97,41 +303,44 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
         throw new Error('No user logged in');
       }
       
-      // Generate IDs for the different tables
-      const currentYear = new Date().getFullYear();
-      const yearPrefix = parseInt( currentYear.toString());
-
-      const {data: latestProfile, error: fetchError} = await supabase
-        .from('profile')
-        .select('profileid')
-        .gte('profileid', yearPrefix * 10000)
-        .lt('profileid',(yearPrefix + 1) * 10000)
-        .order('profileid', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (fetchError) {
-        throw fetchError;
-      }
-
       let profileId: number;
-      if (latestProfile && latestProfile.profileid) {
-        profileId = latestProfile.profileid + 1;
+      
+      if (isEditing && editingProfile) {
+          // Use existing profile ID for editing
+          profileId = editingProfile.profileid;
       } else {
-        profileId = yearPrefix * 10000 + 1;
+          // Generate new ID for creating
+          const currentYear = new Date().getFullYear();
+          const yearPrefix = parseInt(currentYear.toString());
+
+          const {data: latestProfile, error: fetchError} = await supabase
+            .from('profile')
+            .select('profileid')
+            .gte('profileid', yearPrefix * 10000)
+            .lt('profileid',(yearPrefix + 1) * 10000)
+            .order('profileid', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (fetchError) {
+            throw fetchError;
+          }
+
+          if (latestProfile && latestProfile.profileid) {
+            profileId = latestProfile.profileid + 1;
+          } else {
+            profileId = yearPrefix * 10000 + 1;
+          }
       }
 
       const partnerid = profileId;
       const healthid = profileId;
       
-      // Prepare data for Supabase
-      // Debug the current profileData
-      console.log("Current profileData:", profileData);
-      
+      // Prepare payloads
       const profilePayload = {
         profileid: profileId,
-        firstName: profileData.firstName || profileData.firstname || '',
-        lastName: profileData.lastName || profileData.lastname || '',
+        firstName: profileData.firstName || '',
+        lastName: profileData.lastName || '',
         age: profileData.age || 0,
         birthdate: profileData.birthdate || '',
         contactnum: profileData.contactnum || '',
@@ -162,7 +371,6 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
         pIncome: partnersData.pIncome || '',
       };
       
-      
       const healthPayload = {
         health_id: healthid,
         profileid: profileId,
@@ -175,72 +383,97 @@ const AddProfileModal: React.FC<AddProfileModalProps> = ({ isOpen, onClose, onSa
         stage_of_pregnancy: healthData.stage_of_pregnancy || '',
       };
       
-      // Save the profile using the service function
-      const result = await saveCompleteProfile(
-        profilePayload,
-        healthPayload,
-        partnersPayload
-      );
-      
-      if (result.success) {
-        // Call onSave prop with the complete data
-        await onSave({
-          ...profilePayload,
-          partner: partnersPayload,
-          health: healthPayload
-        });
-        
-        // Reset form fields
-        setProfileData({
-          firstName: '',  
-          lastName: '',
-          age: 0,
-          birthdate: '',
-          contactnum: '',
-          barangay: '',
-          municipality: '',
-          region: '',
-          province: '',
-          zipcode: '',
-          marital_status: '',
-          religion: '',
-          living_with: '',
-          partner_occupation: '',
-          family_income: '',
-          current_year_level: '',
-          highest_educational_attainment: '',
-          fathers_occupation: '',
-          mothers_occupation: '',
-          indigenous_ethnicity: '',
-        });
-
-        setPartnersData({
-          pFirstname: '',
-          pLastname: '',
-          pAge: 0,
-          pBirthdate: '',
-          pOccupation: '',
-          pIncome: '',
-        });
-        
-        setHealthData({
-          stage_of_pregnancy: '',
-          pregnancy_status: '',
-          medical_history: [],
-          types_of_support: [],
-          medical_history_others: '',
-
-        });
-        
-        onClose();
+      if (isEditing) {
+            // Update existing records
+            const { error: profileError } = await supabase
+                .from('profile')
+                .update(profilePayload)
+                .eq('profileid', profileId);
+            
+            if (profileError) throw profileError;
+            
+            // Check if partner record exists
+            const { data: existingPartner } = await supabase
+                .from('partnersInfo')
+                .select('partnerid')
+                .eq('profileid', profileId)
+                .maybeSingle();
+            
+            if (existingPartner) {
+                // Update existing partner record
+                const { error: partnerError } = await supabase
+                    .from('partnersInfo')
+                    .update(partnersPayload)
+                    .eq('profileid', profileId);
+                
+                if (partnerError) throw partnerError;
+            } else {
+                // Insert new partner record
+                const { error: partnerError } = await supabase
+                    .from('partnersInfo')
+                    .insert(partnersPayload);
+                
+                if (partnerError) throw partnerError;
+            }
+            
+            // Check if health record exists
+            const { data: existingHealth } = await supabase
+                .from('maternalhealthRecord')
+                .select('health_id')
+                .eq('profileid', profileId)
+                .maybeSingle();
+            
+            if (existingHealth) {
+                // Update existing health record
+                const { error: healthError } = await supabase
+                    .from('maternalhealthRecord')
+                    .update(healthPayload)
+                    .eq('profileid', profileId);
+                
+                if (healthError) throw healthError;
+            } else {
+                // Insert new health record
+                const { error: healthError } = await supabase
+                    .from('maternalhealthRecord')
+                    .insert(healthPayload);
+                
+                if (healthError) throw healthError;
+            }
+            
+            // Call onSave prop
+            await onSave({
+                ...profilePayload,
+                partner: partnersPayload,
+                health: healthPayload
+            });
+            
+            resetForm();
+            onClose();
       } else {
-        setError(result.message || 'An error occurred while saving the profile');
+          // Save new profile using the service function
+          const result = await saveCompleteProfile(
+            profilePayload,
+            healthPayload,
+            partnersPayload
+          );
+          
+          if (result.success) {
+            await onSave({
+              ...profilePayload,
+              partner: partnersPayload,
+              health: healthPayload
+            });
+            
+            resetForm();
+            onClose();
+          } else {
+            setError(result.message || 'An error occurred while saving the profile');
+          }
       }
     } catch (err: any) {
       console.error('Error saving profile:', err);
       setError(err.message || 'An error occurred while saving the profile');
       
-      // Display Supabase error details if available
       if (err?.error_description) {
         console.error('Supabase error details:', err.error_description);
         setError(`${err.message}: ${err.error_description}`);
@@ -364,11 +597,10 @@ const handleMunicipalityChange = (municipalityCode: string) => {
   handleChange("municipality", selectedMunicipality?.name || municipalityCode);
 };
 
-const handleBarangayChange = (barangayCode: string) => {
-  //console.log("Selected Barangay:", barangayCode);
-  const selectedBarangay = barangaylist.find((b: any) => b.brgy_code === barangayCode);
-  handleChange("barangay", selectedBarangay?.name || barangayCode);
-};
+  const handleBarangayChange = (barangayName: string) => {
+    console.log("Selected Barangay:", barangayName);
+    handleChange("barangay", barangayName);
+  };
 
 const Occupations = [
     "Managers", "Professionals", "Technicians and Associate Professionals", "Clerical Support Workers", "Service Workers",
@@ -445,6 +677,7 @@ const Income = [
                             labelPlacement="floating"
                             fill="outline"
                             style={{ "--color": "#000" }}
+                            value={profileData.firstName}
                             onIonChange={(e) =>
                                 handleChange("firstName", e.detail.value!)
                             }
@@ -460,6 +693,7 @@ const Income = [
                             labelPlacement="floating"
                             fill="outline"
                             style={{ "--color": "#000" }}
+                            value={profileData.lastName}
                             onIonChange={(e) =>
                                 handleChange("lastName", e.detail.value!)
                             }
@@ -481,6 +715,7 @@ const Income = [
                             labelPlacement="floating"
                             fill="outline"
                             style={{ "--color": "#000" }}
+                            value={profileData.age}
                             onIonChange={(e) => handleChange("age", e.detail.value!)}
                         />
                       </IonItem>
@@ -496,6 +731,7 @@ const Income = [
                             labelPlacement="floating"
                             fill="outline"
                             style={{ "--color": "#000" }}
+                            value={profileData.birthdate}
                             onIonChange={(e) =>
                                 handleChange("birthdate", e.detail.value!)
                             }
@@ -516,6 +752,7 @@ const Income = [
                             labelPlacement="floating"
                             fill="outline"
                             style={{ "--color": "#000" }}
+                            value={profileData.contactnum}
                             onIonChange={(e) =>
                                 handleChange("contactnum", e.detail.value!)
                             }
@@ -531,6 +768,7 @@ const Income = [
                             fill="outline"
                             labelPlacement="floating"
                             style={{"--color": "#000" }}
+                            value={profileData.marital_status}
                             onIonChange={(e) => handleChange("marital_status", e.detail.value!)}
                         >
                           <IonSelectOption value="married">Married</IonSelectOption>
@@ -556,6 +794,7 @@ const Income = [
                             label="Religion"
                             fill="outline"
                             labelPlacement="floating"
+                            value={profileData.religion}
                             style={{ "--color": "#000" }}
                             onIonChange={(e) => handleChange("religion", e.detail.value!)}
                         >
@@ -577,6 +816,7 @@ const Income = [
                             fill="outline"
                             labelPlacement="floating"
                             style={{ "--color": "#000" }}
+                            value={profileData.living_with}
                             onIonChange={(e) => handleChange("living_with", e.detail.value!)}
                         >
                           <IonSelectOption value="Living with Both Parents">Both Parents</IonSelectOption>
@@ -614,19 +854,12 @@ const Income = [
                             marginTop: "0.5rem",
                           }}
                         >
-                          <IonCol size='12' size-md='6'>
-                            <IonItem lines="none" style={{ "--background": "transparent" }}>
-                              <IonLabel>Yes</IonLabel>
-                              <IonRadio slot="start" value="Yes" />
-                            </IonItem>
-                          </IonCol>
-
-                          <IonCol size='12' size-md='6'>
-                            <IonItem lines="none" style={{ "--background": "transparent" }}>
-                              <IonLabel>No</IonLabel>
-                              <IonRadio slot="start" value="No" />
-                            </IonItem>
-                          </IonCol>
+                          <IonItem lines="none" style={{ "--background": "#fff" }}>
+                              <IonRadio value="Yes">Yes</IonRadio>
+                          </IonItem>
+                          <IonItem lines="none" style={{ "--background": "#fff" }}>
+                              <IonRadio value="No">No</IonRadio>
+                          </IonItem>
                         </IonRadioGroup>
                       </IonItem>
                     </IonCol>
@@ -640,6 +873,7 @@ const Income = [
                             labelPlacement="floating"
                             fill="outline"
                             style={{ "--color": "#000" }}
+                            value={profileData.indigenous_ethnicity}
                             onIonChange={(e) =>
                               handleChange("indigenous_ethnicity", e.detail.value!)
                             }
@@ -661,6 +895,7 @@ const Income = [
                               fill="outline"
                               labelPlacement="floating"
                               style={{ "--color": "#000" }}
+                              value={profileData.fathers_occupation}
                               onIonChange={(e) => handleChange("fathers_occupation", e.detail.value!)}
                           >
                             {Occupations.map((occupation, index) => (
@@ -679,6 +914,7 @@ const Income = [
                               fill="outline"
                               labelPlacement="floating"
                               style={{ "--color": "#000" }}
+                              value={profileData.mothers_occupation}
                               onIonChange={(e) => handleChange("mothers_occupation", e.detail.value!)}
                           >
                             {Occupations.map((occupation, index) => (
@@ -700,6 +936,7 @@ const Income = [
                               label="Family Income"
                               fill="outline"
                               labelPlacement="floating"
+                              value={profileData.family_income}
                               style={{ "--color": "#000" }}
                               onIonChange={(e) => handleChange("family_income", e.detail.value!)}
                           >
@@ -737,6 +974,7 @@ const Income = [
                         labelPlacement="floating"
                         fill='outline'
                         style={{ "--color": "#000" }}
+                        value={partnersData.pFirstname}
                         onIonChange={(e) => handleChange("pFirstname", e.detail.value!)}
                       />
                     </IonItem>
@@ -751,6 +989,7 @@ const Income = [
                         labelPlacement="floating"
                         fill='outline'
                         style={{ "--color": "#000" }}
+                        value={partnersData.pLastname}
                         onIonChange={(e) => handleChange("pLastname", e.detail.value!)}
                       />
                     </IonItem>
@@ -770,6 +1009,7 @@ const Income = [
                         fill='outline'
                         labelPlacement="floating"
                         style={{ "--color": "#000" }}
+                        value={partnersData.pAge}
                         onIonChange={(e) => handleChange("pAge", e.detail.value!)}
                       />
                     </IonItem>
@@ -784,6 +1024,7 @@ const Income = [
                           labelPlacement="floating"
                           fill="outline"
                           style={{ "--color": "#000" }}
+                          value={partnersData.pBirthdate}
                           onIonChange={(e) =>
                               handleChange("pBirthdate", e.detail.value!)
                           }
@@ -804,6 +1045,7 @@ const Income = [
                             fill="outline"
                             labelPlacement="floating"
                             style={{ "--color": "#000" }}
+                            value={partnersData.pOccupation}
                             onIonChange={(e) => handleChange("pOccupation", e.detail.value!)}
                         >
                           {Occupations.map((occupation, index) => (
@@ -821,6 +1063,7 @@ const Income = [
                             fill="outline"
                             labelPlacement="floating"
                             style={{ "--color": "#000" }}
+                            value={partnersData.pIncome}
                             onIonChange={(e) => handleChange("pIncome", e.detail.value!)}
                         >
                           {Income.map((incomeRange, index) => (
@@ -856,10 +1099,11 @@ const Income = [
                           fill="outline" 
                           labelPlacement="floating" 
                           style={{ "--color": "#000", "--background-activated": "transparent" }}
-                        onIonChange={(e) => handleRegionChange(e.detail.value)}>
-                        {regionlist.map((r, index) => (
+                          value={regionlist.find((r: any) => r.name === profileData.region)?.reg_code || ''}
+                          onIonChange={(e) => handleRegionChange(e.detail.value)}>
+                          {regionlist.map((r, index) => (
                           <IonSelectOption key={`reg-${r.reg_code}-${index}`} value={r.reg_code}>{r.name}</IonSelectOption>
-                        ))}
+                          ))}
                       </IonSelect>
                     </IonItem>
                   </IonCol>
@@ -870,7 +1114,8 @@ const Income = [
                           className='ion-margin' 
                           label="Province" fill="outline" 
                           labelPlacement="floating" 
-                          style={{ "--color": "#000" }}  
+                          style={{ "--color": "#000" }} 
+                          value={provincelist.find((p: any) => p.name === profileData.province)?.prov_code || ''} 
                           onIonChange={(e) => handleProvinceChange(e.detail.value)} disabled={provincelist.length === 0}>
                           {provincelist.map((p, index) => (
                             <IonSelectOption key={`prov-${p.prov_code}-${index}`} value={p.prov_code}>{p.name}</IonSelectOption>
@@ -891,6 +1136,7 @@ const Income = [
                           label="Municipality" fill="outline" 
                           labelPlacement="floating" 
                           style={{ "--color": "#000" }} 
+                          value={municipalitylist.find((m: any) => m.name === profileData.municipality)?.mun_code || ''}
                           onIonChange={(e) => handleMunicipalityChange(e.detail.value)} disabled={municipalitylist.length === 0}>
                           {municipalitylist.map((m, index) => (
                             <IonSelectOption key={`mun-${m.mun_code}-${index}`} value={m.mun_code}>{m.name}</IonSelectOption>
@@ -901,19 +1147,21 @@ const Income = [
 
                   {/* BARANGAY */}
                   <IonCol size='12' size-md='6'>
-                    <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent',}}>
-                      <IonSelect 
-                          className='ion-margin' 
-                          label="Barangay" 
-                          fill="outline" 
-                          labelPlacement="floating" 
-                          style={{ "--color": "#000" }}
-                          onIonChange={(e) => handleBarangayChange(e.detail.value)} disabled={barangaylist.length === 0}>
-                          {barangaylist.map((b, index) => (
-                            <IonSelectOption key={`${b.brgy_code}-${index}`} value={b.brgy_code}>{b.name}</IonSelectOption>
-                          ))}
-                        </IonSelect>
-                    </IonItem>
+                      <IonItem lines="none" style={{ "--background": "#fff", "--color": "#000", '--background-hover':'transparent',}}>
+                        <IonSelect 
+                            className='ion-margin' 
+                            label="Barangay" 
+                            fill="outline" 
+                            labelPlacement="floating" 
+                            style={{ "--color": "#000" }}
+                            value={profileData.barangay || ''}
+                            onIonChange={(e) => handleChange("barangay", e.detail.value)} 
+                            disabled={barangaylist.length === 0}>
+                            {barangaylist.map((b, index) => (
+                              <IonSelectOption key={`${b.mun_code}-${b.name}-${index}`} value={b.name}>{b.name}</IonSelectOption>
+                            ))}
+                          </IonSelect>
+                      </IonItem>
                   </IonCol>
                 </IonRow>
               </IonGrid>
@@ -929,6 +1177,7 @@ const Income = [
                           labelPlacement="floating"
                           fill="outline"
                           style={{ "--color": "#000" }}
+                          value={profileData.zipcode}
                           onIonChange={(e) =>
                               handleChange("zipcode", e.detail.value!)
                           }
@@ -961,6 +1210,7 @@ const Income = [
                               fill="outline"
                               labelPlacement="floating"
                               style={{"--color": "#000" }}
+                              value={profileData.type_of_school}
                               onIonChange={(e) => handleChange("type_of_school", e.detail.value!)}
                           >
                             <IonSelectOption value="Private">Private</IonSelectOption>
@@ -978,6 +1228,7 @@ const Income = [
                               fill="outline"
                               labelPlacement="floating"
                               style={{"--color": "#000" }}
+                              value={profileData.current_year_level}
                               onIonChange={(e) => handleChange("current_year_level", e.detail.value!)}
                           >
                             <IonSelectOption value="Grade 1">Grade 1</IonSelectOption>
@@ -1015,6 +1266,7 @@ const Income = [
                               fill="outline"
                               labelPlacement="floating"
                               style={{"--color": "#000" }}
+                              value={profileData.highest_educational_attainment}
                               onIonChange={(e) => handleChange("highest_educational_attainment", e.detail.value!)}
                           >
                             <IonSelectOption value="Grade 1">Grade 1</IonSelectOption>
@@ -1064,6 +1316,7 @@ const Income = [
                           fill="outline"
                           labelPlacement="floating"
                           style={{"--color": "#000" }}
+                          value={healthData.pregnancy_status}
                           onIonChange={(e) => handleChange("pregnancy_status", e.detail.value!)}
                       >
                         <IonSelectOption value="Pregnant">Pregnant</IonSelectOption>
@@ -1080,6 +1333,7 @@ const Income = [
                           fill="outline"
                           labelPlacement="floating"
                           style={{"--color": "#000" }}
+                          value={healthData.stage_of_pregnancy}
                           onIonChange={(e) => handleChange("stage_of_pregnancy", e.detail.value!)}
                       >
                           <IonSelectOption value="First Trimester (1-12 weeks)">First Trimester (1-12 weeks)</IonSelectOption>
@@ -1121,6 +1375,7 @@ const Income = [
                                     '--checkbox-icon-color': '#ffffff',
                                     '--checkmark-color':'#000000'
                                   }}
+                          checked={healthData.medical_history?.includes(cond)}
                           onIonChange={(e) => handleChange(`medical_${cond}`, e.detail.checked)}
                         >
                           <IonLabel style={{ color: "#000" }}>{cond}</IonLabel>
@@ -1152,10 +1407,10 @@ const Income = [
               <IonCol size="auto">
                 <IonButton 
                   color="primary" 
-                  onClick={saveProfileToSupabase}
+                  onClick={handleSave}
                   disabled={loading}
                 >
-                  {loading ? 'Saving...' : 'Save'}
+                  {loading ? <IonSpinner name="lines-small" /> : (isEditing ? 'Update' : 'Save')}
                 </IonButton>
               </IonCol>
               <IonCol size="auto">
